@@ -1,0 +1,238 @@
+\relax 
+\providecommand\babel@aux[2]{}
+\@nameuse{bbl@beforestart}
+\catcode `"\active 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{rivest1978databanks}
+\citation{gentry2009fhe}
+\citation{regev2005lwe}
+\citation{lyubashevsky2010ringlwe}
+\babel@aux{english}{}
+\babel@aux{brazilian}{}
+\babel@aux{english}{}
+\babel@aux{brazilian}{}
+\babel@aux{english}{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{1}{1}{Introduction}{section.1}{}}
+\citation{gentry2013gsw}
+\citation{ducas2015fhew}
+\citation{chillotti2016faster}
+\citation{chillotti2020tfhe}
+\citation{tfhelib}
+\citation{chillotti2020tfhe}
+\citation{joye2022guide}
+\@writefile{toc}{\contentsline {paragraph}{How the scheme is presented.}{2}{paragraph*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Background: From Noisy Encryption to an Encrypted Table Lookup}{2}{section.2}\protected@file@percent }
+\newlabel{sec:background}{{2}{2}{Background: From Noisy Encryption to an Encrypted Table Lookup}{section.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces How the scheme is presented. Each concept of Section~\ref {sec:background} answers a question left open by the one before it. The two tools of Sections~\ref {sec:trlwe} and~\ref {sec:extprod} are what the plan of Section~\ref {sec:plan} needs, and Section~\ref {sec:bootstrapping} puts everything together in the five steps of a bootstrapped gate.}}{3}{figure.1}\protected@file@percent }
+\newlabel{fig:roadmap}{{1}{3}{How the scheme is presented. Each concept of Section~\ref {sec:background} answers a question left open by the one before it. The two tools of Sections~\ref {sec:trlwe} and~\ref {sec:extprod} are what the plan of Section~\ref {sec:plan} needs, and Section~\ref {sec:bootstrapping} puts everything together in the five steps of a bootstrapped gate}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}The Torus}{3}{subsection.2.1}\protected@file@percent }
+\newlabel{sec:torus}{{2.1}{3}{The Torus}{subsection.2.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Messages and rounding.}{3}{paragraph*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Integers times torus elements, but not torus times torus.}{3}{paragraph*.3}\protected@file@percent }
+\citation{regev2005lwe}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The torus $\mathbb  {T}=\mathbb  {R}/\mathbb  {Z}$ drawn as a circle of length one. (a) The eight messages of $\mathbb  {Z}_8$, placed at the multiples of $1/8$; the shaded slice contains the phases that decode to $1/8$, that is, all points at distance less than $1/16$. (b) The bit encoding used by the gates: \textsf  {true} is $+1/8$ and \textsf  {false} is $-1/8$. Decryption only checks in which half of the circle the phase is, so it allows an error of up to $1/8$ on either side.}}{4}{figure.2}\protected@file@percent }
+\newlabel{fig:torus}{{2}{4}{The torus $\mathbb {T}=\mathbb {R}/\mathbb {Z}$ drawn as a circle of length one. (a) The eight messages of $\mathbb {Z}_8$, placed at the multiples of $1/8$; the shaded slice contains the phases that decode to $1/8$, that is, all points at distance less than $1/16$. (b) The bit encoding used by the gates: \textsf {true} is $+1/8$ and \textsf {false} is $-1/8$. Decryption only checks in which half of the circle the phase is, so it allows an error of up to $1/8$ on either side}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}LWE Encryption}{4}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:lwe}{{2.2}{4}{LWE Encryption}{subsection.2.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{A first attempt.}{4}{paragraph*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Adding noise.}{4}{paragraph*.5}\protected@file@percent }
+\citation{gentry2009fhe}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}What LWE Can and Cannot Do}{5}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:limits}{{2.3}{5}{What LWE Can and Cannot Do}{subsection.2.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Linear operations are free.}{5}{paragraph*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Two problems.}{5}{paragraph*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bootstrapping.}{5}{paragraph*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}The Idea of TFHE's Bootstrapping: a Table Lookup}{5}{subsection.2.4}\protected@file@percent }
+\newlabel{sec:plan}{{2.4}{5}{The Idea of TFHE's Bootstrapping: a Table Lookup}{subsection.2.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces The idea of TFHE's bootstrapping, a table lookup by rotation, drawn with $N=8$. {\fontfamily  {pzd}\fontencoding  {U}\fontseries  {m}\fontshape  {n}\selectfont  \char 172} The encrypted phase is rounded to one of $2N=16$ positions. {\fontfamily  {pzd}\fontencoding  {U}\fontseries  {m}\fontshape  {n}\selectfont  \char 173} The table of answers, stored as the coefficients of a polynomial $v$, is rotated by that position, which brings the right answer to the front (the entries that wrap around come back with a minus sign). {\fontfamily  {pzd}\fontencoding  {U}\fontseries  {m}\fontshape  {n}\selectfont  \char 174} The first entry is read. The hard part is step {\fontfamily  {pzd}\fontencoding  {U}\fontseries  {m}\fontshape  {n}\selectfont  \char 173}: the rotation depends on the secret key, so the server must rotate without knowing by how much.}}{6}{figure.3}\protected@file@percent }
+\newlabel{fig:plan}{{3}{6}{The idea of TFHE's bootstrapping, a table lookup by rotation, drawn with $N=8$. \ding {172} The encrypted phase is rounded to one of $2N=16$ positions. \ding {173} The table of answers, stored as the coefficients of a polynomial $v$, is rotated by that position, which brings the right answer to the front (the entries that wrap around come back with a minus sign). \ding {174} The first entry is read. The hard part is step \ding {173}: the rotation depends on the secret key, so the server must rotate without knowing by how much}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Polynomials and TRLWE}{6}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:trlwe}{{2.5}{6}{Polynomials and TRLWE}{subsection.2.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Tables as polynomials.}{6}{paragraph*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{TRLWE: LWE with polynomials.}{6}{paragraph*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Multiplying by an Encrypted Bit}{7}{subsection.2.6}\protected@file@percent }
+\newlabel{sec:extprod}{{2.6}{7}{Multiplying by an Encrypted Bit}{subsection.2.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{The problem.}{7}{paragraph*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 1: small digits.}{7}{paragraph*.12}\protected@file@percent }
+\newlabel{eq:gadget}{{1}{7}{Gadget decomposition}{equation.2.1}{}}
+\newlabel{ex:decimal}{{3}{7}{Signed digits in base 10}{example.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Step 2: the encryptions that the server needs (TRGSW).}{8}{paragraph*.13}\protected@file@percent }
+\newlabel{eq:wish}{{2}{8}{Step 2: the encryptions that the server needs (TRGSW)}{equation.2.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces A TRGSW ciphertext of $m$, drawn as $2\ell =6$ TRLWE rows $(a_r,b_r)$ that encrypt zero, plus the gadget terms (orange). The external product multiplies each row by one digit polynomial, $u_i$ for the digits of $a$ and $w_i$ for the digits of $b$, and adds the six rows. Adding the phases on the right, the gadget terms rebuild $m(b-a\,s')$ from the digits, while the noise is only multiplied by small digits.}}{8}{figure.4}\protected@file@percent }
+\newlabel{fig:trgsw}{{4}{8}{A TRGSW ciphertext of $m$, drawn as $2\ell =6$ TRLWE rows $(a_r,b_r)$ that encrypt zero, plus the gadget terms (orange). The external product multiplies each row by one digit polynomial, $u_i$ for the digits of $a$ and $w_i$ for the digits of $b$, and adds the six rows. Adding the phases on the right, the gadget terms rebuild $m(b-a\,s')$ from the digits, while the noise is only multiplied by small digits}{figure.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Step 3: the external product.}{8}{paragraph*.14}\protected@file@percent }
+\newlabel{eq:extprod}{{3}{8}{Step 3: the external product}{equation.2.3}{}}
+\citation{chillotti2020tfhe}
+\newlabel{prop:extprod}{{1}{9}{Noise of the external product {\cite {chillotti2020tfhe}}}{proposition.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{The encrypted if-then-else (CMux).}{9}{paragraph*.15}\protected@file@percent }
+\newlabel{eq:cmux}{{4}{9}{The encrypted if-then-else (CMux)}{equation.2.4}{}}
+\newlabel{ex:cmux}{{4}{9}{CMux}{example.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}How a Gate Is Bootstrapped}{9}{section.3}\protected@file@percent }
+\newlabel{sec:bootstrapping}{{3}{9}{How a Gate Is Bootstrapped}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Overview}{9}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces The CMux. (a) It chooses one of two TRLWE ciphertexts according to a bit $m$ that is itself encrypted, using one external product. (b) The case of Example~\ref {ex:cmux}: $d_0$ encrypts $\frac  18$ and $d_1$ encrypts $\frac  58$, so $d_1-d_0$ encrypts $\frac  12$. The external product adds $m\cdot \frac  12$ to the phase of $d_0$, which stays at $\frac  18$ when $m=0$ and moves half a turn, to $\frac  58$, when $m=1$. The server does the same work in both cases.}}{10}{figure.5}\protected@file@percent }
+\newlabel{fig:cmux}{{5}{10}{The CMux. (a) It chooses one of two TRLWE ciphertexts according to a bit $m$ that is itself encrypted, using one external product. (b) The case of Example~\ref {ex:cmux}: $d_0$ encrypts $\frac 18$ and $d_1$ encrypts $\frac 58$, so $d_1-d_0$ encrypts $\frac 12$. The external product adds $m\cdot \frac 12$ to the phase of $d_0$, which stays at $\frac 18$ when $m=0$ and moves half a turn, to $\frac 58$, when $m=1$. The server does the same work in both cases}{figure.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Who has which key.}{10}{paragraph*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Step 1: Modulus Switching}{10}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:modswitch}{{3.2}{10}{Step 1: Modulus Switching}{subsection.3.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces The path of a bootstrapped gate. The two input ciphertexts are combined linearly; blind rotation computes the gate on the encrypted phase and gives a TRLWE ciphertext with fresh noise; sample extraction reads its constant coefficient as an LWE ciphertext under the key $s'$, of size $N$; and key switching brings it back to the key $s$, of size $n$, so that it can be used by the next gate. The dashed boxes are the two parts of the public evaluation key that the server has.}}{11}{figure.6}\protected@file@percent }
+\newlabel{fig:pipeline}{{6}{11}{The path of a bootstrapped gate. The two input ciphertexts are combined linearly; blind rotation computes the gate on the encrypted phase and gives a TRLWE ciphertext with fresh noise; sample extraction reads its constant coefficient as an LWE ciphertext under the key $s'$, of size $N$; and key switching brings it back to the key $s$, of size $n$, so that it can be used by the next gate. The dashed boxes are the two parts of the public evaluation key that the server has}{figure.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Step 2: The Test Polynomial}{11}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:testpoly}{{3.3}{11}{Step 2: The Test Polynomial}{subsection.3.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{What the coefficients $v_j$ are.}{11}{paragraph*.17}\protected@file@percent }
+\citation{chillotti2021pbs}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces What the coefficients $v_j$ of the test polynomial mean, for $N=4$. The circle is cut into $2N=8$ slices, numbered by the rounded phase $\bar  \varphi $ (outside), and each slice shows the value that the bootstrapping returns when the phase of its input is in that slice. Coefficient $v_j$ is the output for slice $j$ of the upper half (blue); the opposite slice $N+j$, in the lower half (orange), always returns $-v_j$, because $X^N=-1$. (a) The general rule. (b) The gate test polynomial: every $v_j$ is $\frac  18$, so the output is $+\frac  18$ on the upper half and $-\frac  18$ on the lower half. (c) A table that is not constant, $v_j=j/8$: on the upper half the bootstrapping returns the rounded phase itself.}}{12}{figure.7}\protected@file@percent }
+\newlabel{fig:testwheel}{{7}{12}{What the coefficients $v_j$ of the test polynomial mean, for $N=4$. The circle is cut into $2N=8$ slices, numbered by the rounded phase $\bar \varphi $ (outside), and each slice shows the value that the bootstrapping returns when the phase of its input is in that slice. Coefficient $v_j$ is the output for slice $j$ of the upper half (blue); the opposite slice $N+j$, in the lower half (orange), always returns $-v_j$, because $X^N=-1$. (a) The general rule. (b) The gate test polynomial: every $v_j$ is $\frac 18$, so the output is $+\frac 18$ on the upper half and $-\frac 18$ on the lower half. (c) A table that is not constant, $v_j=j/8$: on the upper half the bootstrapping returns the rounded phase itself}{figure.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why rotating reads the right entry.}{12}{paragraph*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Is the test polynomial encrypted?}{12}{paragraph*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Programmable bootstrapping.}{12}{paragraph*.20}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The test polynomial as a lookup table, drawn for $N=4$. (a) The rounded phase $\bar  \varphi =\left \lfloor 2N\varphi  \right \rceil $ is one of $2N=8$ positions on the torus; positions $0$ to $N-1$ are the upper half and $N$ to $2N-1$ the lower half. (b) The coefficients of $X^{-\bar  \varphi }\cdot v$ for every $\bar  \varphi $: each row is the row above shifted to the left, and the coefficient that leaves on the left comes back on the right with its sign changed, because $X^N=-1$. The constant coefficient (framed) is $v_{\bar  \varphi }$ in the upper half and $-v_{\bar  \varphi -N}$ in the lower half. With every $v_j=\mu $, the output is $+\mu $ or $-\mu $ depending on the half of the circle where the phase is: the sign function used by every gate.}}{13}{figure.8}\protected@file@percent }
+\newlabel{fig:testpoly}{{8}{13}{The test polynomial as a lookup table, drawn for $N=4$. (a) The rounded phase $\bar \varphi =\round {2N\varphi }$ is one of $2N=8$ positions on the torus; positions $0$ to $N-1$ are the upper half and $N$ to $2N-1$ the lower half. (b) The coefficients of $X^{-\bar \varphi }\cdot v$ for every $\bar \varphi $: each row is the row above shifted to the left, and the coefficient that leaves on the left comes back on the right with its sign changed, because $X^N=-1$. The constant coefficient (framed) is $v_{\bar \varphi }$ in the upper half and $-v_{\bar \varphi -N}$ in the lower half. With every $v_j=\mu $, the output is $+\mu $ or $-\mu $ depending on the half of the circle where the phase is: the sign function used by every gate}{figure.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces The test polynomial is not encrypted. Blind rotation starts from the trivial TRLWE ciphertext $(0,X^{-\bar  b}v)$. Its mask is zero, so its phase is the public polynomial $X^{-\bar  b}v$ under any key (here $N=4$, $\bar  b=6$ and the gate test polynomial, as in Example~\ref {ex:blindrot}). The first CMux adds an external product with a ciphertext of the bootstrapping key, which is a real encryption under $s'$. After it, the accumulator has a random mask and some noise, and without the key one cannot see whether it was rotated (here by $X^{3}$).}}{13}{figure.9}\protected@file@percent }
+\newlabel{fig:trivial}{{9}{13}{The test polynomial is not encrypted. Blind rotation starts from the trivial TRLWE ciphertext $(0,X^{-\bar b}v)$. Its mask is zero, so its phase is the public polynomial $X^{-\bar b}v$ under any key (here $N=4$, $\bar b=6$ and the gate test polynomial, as in Example~\ref {ex:blindrot}). The first CMux adds an external product with a ciphertext of the bootstrapping key, which is a real encryption under $s'$. After it, the accumulator has a random mask and some noise, and without the key one cannot see whether it was rotated (here by $X^{3}$)}{figure.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Step 3: Blind Rotation}{13}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:blindrot}{{3.4}{13}{Step 3: Blind Rotation}{subsection.3.4}{}}
+\newlabel{ex:blindrot}{{5}{14}{Bootstrapping an encryption of \textsf {true}, step by step}{example.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Step 4: Sample Extraction}{14}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:extract}{{3.5}{14}{Step 4: Sample Extraction}{subsection.3.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces The blind rotation of Example~\ref {ex:blindrot} ($n=3$, $N=4$, $s=(1,0,1)$, $\bar  b=6$, $\bar  {\mathbf  a}=(3,5,2)$) for any test polynomial $v=v_0+v_1X+v_2X^2+v_3X^3$. Each row is the message of the accumulator (the coefficients of the polynomial it encrypts) after one CMux. The server does the same three CMux operations whatever $s$ is; only the key decides which of them rotate. The final constant coefficient is $v_{\bar  \varphi }=v_1$. With the gate test polynomial ($v_j=\mu $), the rows are the ones in the table of the example.}}{15}{figure.10}\protected@file@percent }
+\newlabel{fig:blindrot}{{10}{15}{The blind rotation of Example~\ref {ex:blindrot} ($n=3$, $N=4$, $s=(1,0,1)$, $\bar b=6$, $\bar {\mathbf a}=(3,5,2)$) for any test polynomial $v=v_0+v_1X+v_2X^2+v_3X^3$. Each row is the message of the accumulator (the coefficients of the polynomial it encrypts) after one CMux. The server does the same three CMux operations whatever $s$ is; only the key decides which of them rotate. The final constant coefficient is $v_{\bar \varphi }=v_1$. With the gate test polynomial ($v_j=\mu $), the rows are the ones in the table of the example}{figure.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Sample extraction for $N=4$. In the constant coefficient of $a\cdot s'$, each $s'_j$ is multiplied by $a_{N-j}$, with a minus sign for $j\ge 1$. Reordering the mask and changing these signs gives an LWE ciphertext $(a',b_0)$ whose phase, under the coefficients of $s'$, is the constant coefficient of the TRLWE phase. Nothing is computed and no noise is added.}}{15}{figure.11}\protected@file@percent }
+\newlabel{fig:extract}{{11}{15}{Sample extraction for $N=4$. In the constant coefficient of $a\cdot s'$, each $s'_j$ is multiplied by $a_{N-j}$, with a minus sign for $j\ge 1$. Reordering the mask and changing these signs gives an LWE ciphertext $(a',b_0)$ whose phase, under the coefficients of $s'$, is the constant coefficient of the TRLWE phase. Nothing is computed and no noise is added}{figure.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Step 5: Key Switching}{15}{subsection.3.6}\protected@file@percent }
+\newlabel{sec:ks}{{3.6}{15}{Step 5: Key Switching}{subsection.3.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why it is needed.}{15}{paragraph*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The idea.}{15}{paragraph*.22}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Key switching for one coefficient $a_i$ of the extracted ciphertext. For each of the $t=8$ digit positions $j$, the table has an LWE encryption under $s$ of $v\cdot s'_i/4^j$ for every possible digit $v$. The base-4 digits of $a_i$ choose one entry per position; the chosen entries are subtracted from $(\mathbf  0,b)$, and zero digits are skipped. Doing this for all $N=1024$ coefficients replaces the part $\DOTSB \sum@ \slimits@ _ia_is'_i$ of the phase by the same value computed under the key $s$.}}{16}{figure.12}\protected@file@percent }
+\newlabel{fig:kstable}{{12}{16}{Key switching for one coefficient $a_i$ of the extracted ciphertext. For each of the $t=8$ digit positions $j$, the table has an LWE encryption under $s$ of $v\cdot s'_i/4^j$ for every possible digit $v$. The base-4 digits of $a_i$ choose one entry per position; the chosen entries are subtracted from $(\mathbf 0,b)$, and zero digits are skipped. Doing this for all $N=1024$ coefficients replaces the part $\sum _ia_is'_i$ of the phase by the same value computed under the key $s$}{figure.12}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Gate bootstrapping of an LWE ciphertext $c=(\mathbf  {a},b)$ under $s$}}{16}{algorithm.1}\protected@file@percent }
+\newlabel{alg:bootstrap}{{1}{16}{The idea}{algorithm.1}{}}
+\citation{chillotti2020tfhe}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Why the Noise Is Reset}{17}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:bsnoise}{{3.7}{17}{Why the Noise Is Reset}{subsection.3.7}{}}
+\newlabel{eq:varbr}{{5}{17}{Why the Noise Is Reset}{equation.3.5}{}}
+\newlabel{eq:varks}{{6}{17}{Why the Noise Is Reset}{equation.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}From a Sign Function to Logic Gates}{17}{subsection.3.8}\protected@file@percent }
+\newlabel{sec:gates}{{3.8}{17}{From a Sign Function to Logic Gates}{subsection.3.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{NAND.}{17}{paragraph*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Other gates.}{18}{paragraph*.24}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Linear combination computed before the bootstrapping of each gate.}}{18}{table.1}\protected@file@percent }
+\newlabel{tab:gates}{{1}{18}{Linear combination computed before the bootstrapping of each gate}{table.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Phases at the input of the bootstrapping, without noise. (a) NAND: every point is at distance $\frac  18$ from the closest boundary ($0$ or $\frac  12$); this distance is the noise margin. (b) XOR: with $c_x+c_y$, different inputs would fall on the boundary. After doubling, the two cases with equal inputs fall on the same point $\pm \frac  12$, and adding $\frac  14$ separates the two groups with a margin of $\frac  14$.}}{18}{figure.13}\protected@file@percent }
+\newlabel{fig:gates}{{13}{18}{Phases at the input of the bootstrapping, without noise. (a) NAND: every point is at distance $\frac 18$ from the closest boundary ($0$ or $\frac 12$); this distance is the noise margin. (b) XOR: with $c_x+c_y$, different inputs would fall on the boundary. After doubling, the two cases with equal inputs fall on the same point $\pm \frac 12$, and adding $\frac 14$ separates the two groups with a margin of $\frac 14$}{figure.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{MUX.}{18}{paragraph*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}An Encrypted Adder}{18}{subsection.3.9}\protected@file@percent }
+\newlabel{sec:adder}{{3.9}{18}{An Encrypted Adder}{subsection.3.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces The MUX gate on all inputs. $u_1$ and $u_2$ are the results of the two bootstrappings without key switching. At most one of them is $+\frac  18$, so $u_1+u_2+\frac  18$ is always $\pm \frac  18$.}}{19}{table.2}\protected@file@percent }
+\newlabel{tab:mux}{{2}{19}{The MUX gate on all inputs. $u_1$ and $u_2$ are the results of the two bootstrappings without key switching. At most one of them is $+\frac 18$, so $u_1+u_2+\frac 18$ is always $\pm \frac 18$}{table.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Encrypting an integer.}{19}{paragraph*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Adding by hand in binary.}{19}{paragraph*.27}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Truth table of a full adder, with the formulas used by our circuit ($p=x\oplus y$).}}{19}{table.3}\protected@file@percent }
+\newlabel{tab:fulladder}{{3}{19}{Truth table of a full adder, with the formulas used by our circuit ($p=x\oplus y$)}{table.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{From the truth table to gates.}{20}{paragraph*.28}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces One column of the adder (a full adder): $\mathit  {sum}_i=p_i\oplus c_i$ and $c_{i+1}=\mathrm  {MUX}(p_i;\,c_i,\,x_i)$, with $p_i=x_i\oplus y_i$. When $x_i=y_i$ the outgoing carry is $x_i$, whatever $c_i$ is; otherwise the incoming carry $c_i$ goes through. Each column uses two XOR gates and one MUX, that is, four blind rotations.}}{20}{figure.14}\protected@file@percent }
+\newlabel{fig:adder}{{14}{20}{One column of the adder (a full adder): $\mathit {sum}_i=p_i\oplus c_i$ and $c_{i+1}=\mathrm {MUX}(p_i;\,c_i,\,x_i)$, with $p_i=x_i\oplus y_i$. When $x_i=y_i$ the outgoing carry is $x_i$, whatever $c_i$ is; otherwise the incoming carry $c_i$ goes through. Each column uses two XOR gates and one MUX, that is, four blind rotations}{figure.14}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Implementation}{20}{section.4}\protected@file@percent }
+\newlabel{sec:impl}{{4}{20}{Implementation}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Organization}{20}{subsection.4.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Structure of the library. Each box is a header file in \texttt  {src/} with its own unit test in \texttt  {tests/}; an arrow goes from a header to the headers that include it. The programs in \texttt  {apps/} only use \texttt  {gates.hpp}.}}{21}{figure.15}\protected@file@percent }
+\newlabel{fig:arch}{{15}{21}{Structure of the library. Each box is a header file in \texttt {src/} with its own unit test in \texttt {tests/}; an arrow goes from a header to the headers that include it. The programs in \texttt {apps/} only use \texttt {gates.hpp}}{figure.15}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Parameters (the same as the 128-bit set of the original library).}}{21}{table.4}\protected@file@percent }
+\newlabel{tab:params}{{4}{21}{Parameters (the same as the 128-bit set of the original library)}{table.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Unit tests. \texttt  {make test} runs them in order and stops at the first failed check.}}{21}{table.5}\protected@file@percent }
+\newlabel{tab:tests}{{5}{21}{Unit tests. \code {make test} runs them in order and stops at the first failed check}{table.5}{}}
+\citation{cooley1965fft}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Torus Arithmetic}{22}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:torusimpl}{{4.2}{22}{Torus Arithmetic}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Fast Polynomial Products: the Negacyclic FFT}{22}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:fft}{{4.3}{22}{Fast Polynomial Products: the Negacyclic FFT}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why we need it.}{22}{paragraph*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 1: multiply values instead of coefficients.}{22}{paragraph*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 2: choose points where the reduction is automatic.}{22}{paragraph*.31}\protected@file@percent }
+\citation{crandall1994dwt}
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces The roots of $X^8+1$, at the odd multiples of $\pi /8$ on the unit circle. The negacyclic FFT evaluates a polynomial at the four points $\omega _k=e^{i\pi (4k+1)/N}$ (filled). The other four roots (hollow, joined by dotted lines) are their complex conjugates, where a polynomial with real coefficients takes conjugate values, so they do not need to be computed.}}{23}{figure.16}\protected@file@percent }
+\newlabel{fig:roots}{{16}{23}{The roots of $X^8+1$, at the odd multiples of $\pi /8$ on the unit circle. The negacyclic FFT evaluates a polynomial at the four points $\omega _k=e^{i\pi (4k+1)/N}$ (filled). The other four roots (hollow, joined by dotted lines) are their complex conjugates, where a polynomial with real coefficients takes conjugate values, so they do not need to be computed}{figure.16}{}}
+\@writefile{toc}{\contentsline {paragraph}{Step 3: turn it into a standard FFT.}{23}{paragraph*.32}\protected@file@percent }
+\citation{cooley1965fft}
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Forward negacyclic transform, drawn for $N=8$. The two halves of the coefficient vector are folded into $N/2$ complex numbers, which are multiplied by the twist factors $e^{i\pi j/N}$. A standard FFT of size $N/2$ then gives the values of $p$ at one root of $X^N+1$ from each conjugate pair. The inverse transform does the same steps in reverse order.}}{24}{figure.17}\protected@file@percent }
+\newlabel{fig:fft}{{17}{24}{Forward negacyclic transform, drawn for $N=8$. The two halves of the coefficient vector are folded into $N/2$ complex numbers, which are multiplied by the twist factors $e^{i\pi j/N}$. A standard FFT of size $N/2$ then gives the values of $p$ at one root of $X^N+1$ from each conjugate pair. The inverse transform does the same steps in reverse order}{figure.17}{}}
+\@writefile{toc}{\contentsline {paragraph}{Step 4: the FFT itself.}{24}{paragraph*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Is double precision enough?}{24}{paragraph*.34}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces A DFT of size $4$ computed by the FFT. The inputs are first put in bit-reversed order ($z_0,z_2,z_1,z_3$). Each round combines pairs of values with a \emph  {butterfly}, $(u,v)\DOTSB \mapstochar \rightarrow (u+w\,v,\tmspace  +\thickmuskip {.2777em}u-w\,v)$, where $w$ is a root of unity ($1$, or $i$ for the last pair). A transform of size $M$ needs $\log _2M$ rounds of $M/2$ butterflies.}}{25}{figure.18}\protected@file@percent }
+\newlabel{fig:butterfly}{{18}{25}{A DFT of size $4$ computed by the FFT. The inputs are first put in bit-reversed order ($z_0,z_2,z_1,z_3$). Each round combines pairs of values with a \emph {butterfly}, $(u,v)\mapsto (u+w\,v,\;u-w\,v)$, where $w$ is a root of unity ($1$, or $i$ for the last pair). A transform of size $M$ needs $\log _2M$ rounds of $M/2$ butterflies}{figure.18}{}}
+\@writefile{toc}{\contentsline {paragraph}{A detail about complex numbers.}{25}{paragraph*.35}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Signed Digits with One Addition: the Offset Trick}{25}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:offset}{{4.4}{25}{Signed Digits with One Addition: the Offset Trick}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{The problem.}{25}{paragraph*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The slow way.}{25}{paragraph*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The trick.}{25}{paragraph*.38}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces The offset trick in base $10$ with two digits: add $0.555$, keep the part after the decimal point, take the two digits and subtract $5$ from each.}}{26}{table.6}\protected@file@percent }
+\newlabel{tab:offset10}{{6}{26}{The offset trick in base $10$ with two digits: add $0.555$, keep the part after the decimal point, take the two digits and subtract $5$ from each}{table.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why it works.}{26}{paragraph*.39}\protected@file@percent }
+\newlabel{lem:offset}{{1}{26}{Offset trick}{lemma.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{In binary.}{26}{paragraph*.40}\protected@file@percent }
+\citation{tfhelib}
+\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces The offset trick for $t=0.7$, with $B_g=2^7$ and $\ell =3$. The offset has $64$ in each $7$-bit digit group and half of the last digit ($2^{10}$) in the part that is thrown away. After one 32-bit addition, each digit is obtained with a shift and a mask, and subtracting $64$ gives signed digits in $[-64,64)$. The ordinary digits of $t$ are $(89,76,102)$; the carries of the addition (red) make each digit that is $64$ or more negative and add $1$ to the digit on its left.}}{27}{figure.19}\protected@file@percent }
+\newlabel{fig:gadget}{{19}{27}{The offset trick for $t=0.7$, with $\Bg =2^7$ and $\ell =3$. The offset has $64$ in each $7$-bit digit group and half of the last digit ($2^{10}$) in the part that is thrown away. After one 32-bit addition, each digit is obtained with a shift and a mask, and subtracting $64$ gives signed digits in $[-64,64)$. The ordinary digits of $t$ are $(89,76,102)$; the carries of the addition (red) make each digit that is $64$ or more negative and add $1$ to the digit on its left}{figure.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}External Product in the Frequency Domain}{27}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Key-Switching Table}{27}{subsection.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Evaluation}{27}{section.5}\protected@file@percent }
+\newlabel{sec:eval}{{5}{27}{Experimental Evaluation}{section.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces One external product in our implementation. The digit polynomials of both components are transformed once and multiplied by the rows of the TRGSW ciphertext, which were transformed when the key was created. The products are added up in the frequency domain, so each external product needs only two inverse transforms. Blind rotation does one external product for each nonzero $\bar  a_i$, about $n=630$ per gate.}}{28}{figure.20}\protected@file@percent }
+\newlabel{fig:extprod}{{20}{28}{One external product in our implementation. The digit polynomials of both components are transformed once and multiplied by the rows of the TRGSW ciphertext, which were transformed when the key was created. The products are added up in the frequency domain, so each external product needs only two inverse transforms. Blind rotation does one external product for each nonzero $\bar a_i$, about $n=630$ per gate}{figure.20}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Setup}{28}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Correctness}{28}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Performance}{28}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Comparison with the original library (range over the runs, $500$ gates per run, one thread). Memory is the peak memory used by the benchmark program.}}{29}{table.7}\protected@file@percent }
+\newlabel{tab:perf}{{7}{29}{Comparison with the original library (range over the runs, $500$ gates per run, one thread). Memory is the peak memory used by the benchmark program}{table.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Time per gate and key generation time, on one thread, with the same parameters and on the same machine (average over the runs; the ranges are in Table~\ref {tab:perf}). The original library is shown with its two FFT versions; the rest of its code is the same in both.}}{29}{figure.21}\protected@file@percent }
+\newlabel{fig:time}{{21}{29}{Time per gate and key generation time, on one thread, with the same parameters and on the same machine (average over the runs; the ranges are in Table~\ref {tab:perf}). The original library is shown with its two FFT versions; the rest of its code is the same in both}{figure.21}{}}
+\@writefile{toc}{\contentsline {paragraph}{Where the time goes.}{29}{paragraph*.41}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {22}{\ignorespaces Where the time of a NAND gate goes. We measured each operation on its own and multiplied its time by the number of times it runs per gate; percentages are relative to the measured time of a gate. The value-by-value products are measured with the TRGSW rows read from main memory, as in the blind rotation. ``Other'' is the measured gate time minus all the listed parts.}}{30}{figure.22}\protected@file@percent }
+\newlabel{fig:profile}{{22}{30}{Where the time of a NAND gate goes. We measured each operation on its own and multiplied its time by the number of times it runs per gate; percentages are relative to the measured time of a gate. The value-by-value products are measured with the TRGSW rows read from main memory, as in the blind rotation. ``Other'' is the measured gate time minus all the listed parts}{figure.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Memory}{30}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Noise}{30}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:noise}{{5.5}{30}{Noise}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Bootstrapping resets the noise.}{30}{paragraph*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bounds and average case.}{30}{paragraph*.43}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {23}{\ignorespaces Bootstrapping resets the noise. Orange: the distribution of the phase of encryptions of $+\frac  18$ created with standard deviation \ensuremath  {1.0\cdot 10^{-2}}, more than $300$ times the noise of a normal ciphertext. Blue: the phase after one bootstrapping of each of them, with standard deviation \ensuremath  {2.9\cdot 10^{-3}}, the same as for any other input.}}{31}{figure.23}\protected@file@percent }
+\newlabel{fig:noisereset}{{23}{31}{Bootstrapping resets the noise. Orange: the distribution of the phase of encryptions of $+\frac 18$ created with standard deviation \BootSdIn , more than $300$ times the noise of a normal ciphertext. Blue: the phase after one bootstrapping of each of them, with standard deviation \BootSdOut , the same as for any other input}{figure.23}{}}
+\newlabel{eq:ksbias}{{7}{31}{Bounds and average case}{equation.5.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Measurements.}{31}{paragraph*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{31}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{31}{Conclusion}{section.6}{}}
+\citation{chillotti2021pbs}
+\bibstyle{sbc}
+\bibdata{refs}
+\bibcite{chillotti2016faster}{Chillotti et~al. 2016a}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Variance of the output error of the gate bootstrapping: worst-case bound, average-case prediction and measurement (10{} keys $\times $ 1{,}000{} gates; variance within each key, averaged over the keys).}}{32}{table.8}\protected@file@percent }
+\newlabel{tab:noise}{{8}{32}{Variance of the output error of the gate bootstrapping: worst-case bound, average-case prediction and measurement (\NoiseKeys {} keys $\times $ \NoiseGates {} gates; variance within each key, averaged over the keys)}{table.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {24}{\ignorespaces Output noise of the gate bootstrapping, for 10{} keys and 1{,}000{} gates per key. (a) Histogram of the error after key switching, measured from the average error of its own key, compared with a Gaussian with the predicted variance \ensuremath  {9.0\cdot 10^{-6}}. (b) The average error of each key; the shaded bands show $\pm 1$ and $\pm 2$ predicted standard deviations of the bias of Eq.~\eqref  {eq:ksbias}. Both are very small compared with the margin $\frac  18=125\cdot 10^{-3}$.}}{32}{figure.24}\protected@file@percent }
+\newlabel{fig:noise}{{24}{32}{Output noise of the gate bootstrapping, for \NoiseKeys {} keys and \NoiseGates {} gates per key. (a) Histogram of the error after key switching, measured from the average error of its own key, compared with a Gaussian with the predicted variance \AvgTotal . (b) The average error of each key; the shaded bands show $\pm 1$ and $\pm 2$ predicted standard deviations of the bias of Eq.~\eqref {eq:ksbias}. Both are very small compared with the margin $\frac 18=125\cdot 10^{-3}$}{figure.24}{}}
+\bibcite{tfhelib}{Chillotti et~al. 2016b}
+\bibcite{chillotti2020tfhe}{Chillotti et~al. 2020}
+\bibcite{chillotti2021pbs}{Chillotti et~al. 2021}
+\bibcite{cooley1965fft}{Cooley and Tukey 1965}
+\bibcite{crandall1994dwt}{Crandall and Fagin 1994}
+\bibcite{ducas2015fhew}{Ducas and Micciancio 2015}
+\bibcite{gentry2009fhe}{Gentry 2009}
+\bibcite{gentry2013gsw}{Gentry et~al. 2013}
+\bibcite{joye2022guide}{Joye 2022}
+\bibcite{lyubashevsky2010ringlwe}{Lyubashevsky et~al. 2010}
+\bibcite{regev2005lwe}{Regev 2005}
+\bibcite{rivest1978databanks}{Rivest et~al. 1978}
+\gdef \@abspage@last{33}
