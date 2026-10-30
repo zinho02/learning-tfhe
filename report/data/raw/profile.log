@@ -1,0 +1,4 @@
+primitives (us): forward 1.669 backward 2.363 mulAcc 0.113 (key from memory 0.636) decompose 1.254 rotate 0.311
+externalProduct (us): same key sample 21.75, cycling over the key 33.65
+steps 629 blindRotate 21270.4 us keySwitch 768.1 us NAND 22199.7 us
+checksum 1195127356

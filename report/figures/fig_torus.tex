@@ -1,0 +1,46 @@
+% The torus as a circle: (a) messages of Z_8 and the decoding region of 1/8;
+% (b) bit encoding +-1/8 and the sign-based decision used for gates.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\small]
+  \def\R{1.75}
+  % ---------------- (a) ----------------
+  \begin{scope}
+    \fill[cBlue!22] (0,0) -- (22.5:\R) arc (22.5:67.5:\R) -- cycle;
+    \draw[line width=0.9pt] (0,0) circle (\R);
+    \foreach \k/\lab in {0/0, 1/\tfrac18, 2/\tfrac14, 3/\tfrac38, 4/\tfrac12,
+                         5/\tfrac58, 6/\tfrac34, 7/\tfrac78} {
+      \fill (\k*45:\R) circle (1.8pt);
+      \node at (\k*45:\R+0.42) {$\lab$};
+    }
+    \draw[cBlue, densely dashed] (0,0) -- (22.5:\R) (0,0) -- (67.5:\R);
+    \node[font=\footnotesize, align=center, cBlue!80!black] at (45:0.95)
+      {decodes\\to $\tfrac18$};
+    \node at (-\R-0.6, \R+0.35) {(a)};
+  \end{scope}
+  % ---------------- (b) ----------------
+  \begin{scope}[xshift=7.6cm]
+    \fill[cBlue!14] (0,0) -- (\R,0) arc (0:180:\R) -- cycle;
+    \fill[cOrange!16] (0,0) -- (-\R,0) arc (180:360:\R) -- cycle;
+    \draw[line width=0.9pt] (0,0) circle (\R);
+    \draw[cGray, densely dotted] (-\R-0.15,0) -- (\R+0.15,0);
+    \node[right, font=\footnotesize] at (\R+0.15,0) {$0$};
+    \node[left, font=\footnotesize] at (-\R-0.15,0) {$\tfrac12$};
+    \fill[cBlue] (45:\R) circle (2.4pt);
+    \fill[cOrange] (-45:\R) circle (2.4pt);
+    \node[cBlue!80!black, anchor=south west] at (45:\R+0.05) {$+\tfrac18$: \textsf{true}};
+    \node[cOrange!80!black, anchor=north west] at (-45:\R+0.05) {$-\tfrac18$: \textsf{false}};
+    \node[font=\footnotesize, align=center] at (0,0.75) {phase in $(0,\tfrac12)$\\$\Rightarrow$ \textsf{true}};
+    \node[font=\footnotesize, align=center] at (0,-0.75) {phase in $(-\tfrac12,0)$\\$\Rightarrow$ \textsf{false}};
+    \node at (-\R-0.6, \R+0.35) {(b)};
+  \end{scope}
+\end{tikzpicture}
+\caption{The torus $\mathbb{T}=\mathbb{R}/\mathbb{Z}$ drawn as a circle of
+length one. (a) The eight messages of $\mathbb{Z}_8$, placed at the multiples
+of $1/8$; the shaded slice contains the phases that decode to $1/8$, that is,
+all points at distance less than $1/16$. (b) The bit encoding used by the
+gates: \textsf{true} is $+1/8$ and \textsf{false} is $-1/8$. Decryption only
+checks in which half of the circle the phase is, so it allows an error of up
+to $1/8$ on either side.}
+\label{fig:torus}
+\end{figure}

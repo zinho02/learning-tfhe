@@ -1,0 +1,63 @@
+% The test polynomial as a lookup table, for N = 4: (a) the 2N positions of the
+% rounded phase on the torus; (b) X^(-phibar) * v for every phibar, whose
+% constant coefficient (framed) is the output. Shared by the report and slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  % ---------------- (a) ----------------
+  \begin{scope}
+    \def\rad{1.5}
+    \fill[cBlue!12] (0,0) -- (\rad,0) arc (0:180:\rad) -- cycle;
+    \fill[cOrange!14] (0,0) -- (-\rad,0) arc (180:360:\rad) -- cycle;
+    \draw[line width=0.9pt] (0,0) circle (\rad);
+    \foreach \p in {0,...,7} {
+      \fill (\p*45:\rad) circle (1.8pt);
+      \node at (\p*45:\rad+0.38) {$\p$};
+    }
+    \fill[cGreen] (51:\rad) circle (2.2pt);
+    \draw[->, cGreen, line width=0.9pt] (51:\rad-0.05) arc (51:46:\rad-0.05);
+    \node[cGreen!80!black, align=center, font=\scriptsize] at (0,0.62)
+      {phase $\varphi$ $\mapsto$ $\bar\varphi=1$};
+    \node[cBlue!85!black, font=\scriptsize] at (0,0.2) {$\bar\varphi<N$};
+    \node[cOrange!85!black, font=\scriptsize] at (0,-0.3) {$\bar\varphi\ge N$};
+    \node[align=center, font=\scriptsize, cGray] at (0,-\rad-0.8) {$\bar\varphi=\round{2N\varphi}$, \ $2N=8$};
+    \node at (-\rad-0.6,\rad+0.35) {(a)};
+  \end{scope}
+  % ---------------- (b) ----------------
+  \begin{scope}[xshift=4.3cm, yshift=1.65cm]
+    \def\cw{0.82}
+    \def\ch{0.42}
+    \node[font=\scriptsize, cGray] at (-0.55,0.42) {$\bar\varphi$};
+    \foreach \j in {0,...,3}
+      \node[font=\scriptsize, cGray] at (\j*\cw,0.42) {$X^{\j}$};
+    \foreach \r in {0,...,7} {
+      \node[font=\scriptsize] at (-0.55,-\r*\ch) {\r};
+      \foreach \j in {0,...,3} {
+        \pgfmathtruncatemacro{\k}{\j+\r}
+        \pgfmathtruncatemacro{\q}{mod(floor(\k/4),2)}
+        \pgfmathtruncatemacro{\c}{mod(\k,4)}
+        \ifnum\q=0
+          \node[draw=cNavy!35, fill=cBlue!14, minimum width=\cw cm, minimum height=\ch cm,
+                inner sep=0pt] at (\j*\cw,-\r*\ch) {$v_{\c}$};
+        \else
+          \node[draw=cNavy!35, fill=cOrange!16, minimum width=\cw cm, minimum height=\ch cm,
+                inner sep=0pt] at (\j*\cw,-\r*\ch) {$-v_{\c}$};
+        \fi
+      }
+    }
+    \draw[cGreen!70!black, line width=1.3pt] (-0.5*\cw,0.5*\ch) rectangle (0.5*\cw,-7.5*\ch);
+    \node[cGreen!70!black, font=\scriptsize, anchor=north west] at (-0.5*\cw,-7.6*\ch)
+      {$\uparrow$ constant coefficient};
+    \node[font=\scriptsize, align=center, cGray] at (1.5*\cw,-9.9*\ch)
+      {$X^{-\bar\varphi}\cdot v$, \ $v=v_0+v_1X+v_2X^2+v_3X^3$};
+    % output with the gate test polynomial
+    \begin{scope}[visible on=<2->]
+      \node[font=\scriptsize, cGray, align=center] at (5.0*\cw,0.42) {gates: $v_j=\mu$};
+      \foreach \r in {0,...,3}
+        \node[cBlue!85!black] at (5.0*\cw,-\r*\ch) {$+\mu$};
+      \foreach \r in {4,...,7}
+        \node[cOrange!85!black] at (5.0*\cw,-\r*\ch) {$-\mu$};
+      \draw[->, cGray] (3.65*\cw,-1.5*\ch) -- (4.45*\cw,-1.5*\ch);
+      \draw[->, cGray] (3.65*\cw,-5.5*\ch) -- (4.45*\cw,-5.5*\ch);
+    \end{scope}
+    \node at (-1.05,0.6) {(b)};
+  \end{scope}
+\end{tikzpicture}

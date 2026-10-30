@@ -1,0 +1,4 @@
+key generation: 882.22 ms
+NAND: 107.76 ms per gate (average of 500)
+output error: mean -5.78e-05 variance 1.16e-05
+decryption errors: 0 out of 500 gates

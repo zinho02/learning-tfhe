@@ -1,0 +1,36 @@
+% The test polynomial enters blind rotation as a trivial (public, noiseless)
+% TRLWE sample; the first CMux turns the accumulator into a real ciphertext.
+% Example of Section 3 (N = 4, b-bar = 6). Shared by the report and the slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  \def\cw{0.78}
+  \def\ch{0.48}
+  % ---------------- trivial sample ----------------
+  \node[font=\small\bfseries, anchor=south] at (1.5*\cw,0.62) {start: trivial ciphertext};
+  \node[anchor=east] at (-0.5*\cw-0.1,0.2) {mask $a$};
+  \node[anchor=east] at (-0.5*\cw-0.1,-0.35) {body $b$};
+  \foreach \j in {0,...,3}
+    \node[draw=cNavy!40, fill=white, minimum width=\cw cm, minimum height=\ch cm,
+          inner sep=0pt] at (\j*\cw,0.2) {$0$};
+  \foreach \v/\f [count=\j from 0] in {-\mu/cOrange!16, -\mu/cOrange!16, +\mu/cBlue!14, +\mu/cBlue!14}
+    \node[draw=cNavy!40, fill=\f, minimum width=\cw cm, minimum height=\ch cm,
+          inner sep=0pt] at (\j*\cw,-0.35) {$\v$};
+  \node[anchor=north, align=center, font=\scriptsize] at (1.5*\cw,-0.7)
+    {$=X^{-6}v$, \ phase $=b$ under \emph{any} key\\public, no noise};
+  % ---------------- the CMux ----------------
+  \draw[->, line width=0.9pt, cNavy!80, visible on=<2->] (3.9*\cw,-0.07) -- (7.1*\cw,-0.07)
+    node[midway, above, align=center, font=\scriptsize] {CMux with $\BK_1$}
+    node[midway, below, align=center, font=\scriptsize, cGray!90!black]
+      {adds an encryption\\under the real key};
+  % ---------------- real ciphertext ----------------
+  \begin{scope}[xshift=8.1*\cw cm, visible on=<2->]
+    \node[font=\small\bfseries, anchor=south] at (1.5*\cw,0.62) {after step 1: real ciphertext};
+    \foreach \j in {0,...,3}
+      \node[draw=cNavy!40, fill=cGray!22, minimum width=\cw cm, minimum height=\ch cm,
+            inner sep=0pt, text=cGray!60!black] at (\j*\cw,0.2) {$?$};
+    \foreach \j in {0,...,3}
+      \node[draw=cNavy!40, fill=cGray!22, minimum width=\cw cm, minimum height=\ch cm,
+            inner sep=0pt, text=cGray!60!black] at (\j*\cw,-0.35) {$?$};
+    \node[anchor=north, align=center, font=\scriptsize] at (1.5*\cw,-0.7)
+      {random-looking without the key;\\phase $=b-a\cdot s'=X^{-3}v+e$};
+  \end{scope}
+\end{tikzpicture}

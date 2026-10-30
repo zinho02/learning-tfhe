@@ -1,0 +1,44 @@
+% Output noise: histogram of the within-key error and per-key bias.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+    group style={group size=2 by 1, horizontal sep=1.7cm},
+    height=5.4cm,
+    tick label style={font=\footnotesize}, label style={font=\small},
+    title style={font=\small},
+    grid style={cGray!20},
+    scaled ticks=false,
+  ]
+  \nextgroupplot[width=0.56\textwidth, title={(a) error after key switching},
+    xlabel={error $-$ mean of its key ($10^{-3}$)}, ylabel={density},
+    xmin=-12, xmax=12, ymin=0, ymajorgrids,
+    legend style={font=\scriptsize, at={(0.98,0.97)}, anchor=north east,
+                  draw=cGray!50, fill=white, fill opacity=0.9, text opacity=1},
+    legend cell align=left, yticklabels={}, ytick=\empty]
+  \addplot[ybar interval=0.98, fill=cBlue!35, draw=cBlue!70!black]
+    table[x expr=\thisrow{center}*1000-0.25, y=density] {data/noise_hist.dat};
+  \addlegendentry{measured}
+  \addplot[cOrange, line width=1.1pt, domain=-12:12, samples=161]
+    {exp(-(x/1000)^2/(2*\AvgTotalRaw))/sqrt(2*pi*\AvgTotalRaw)};
+  \addlegendentry{average-case prediction}
+  \nextgroupplot[width=0.42\textwidth, title={(b) mean error of each key},
+    xlabel={key}, ylabel={mean error ($10^{-3}$)},
+    xmin=0.3, xmax=10.7, ymin=-3.2, ymax=3.2, xtick={1,...,10},
+    ymajorgrids]
+  \fill[cOrange!12] (axis cs:0.3,{-2000*\BiasStdRaw}) rectangle (axis cs:10.7,{2000*\BiasStdRaw});
+  \fill[cOrange!25] (axis cs:0.3,{-1000*\BiasStdRaw}) rectangle (axis cs:10.7,{1000*\BiasStdRaw});
+  \addplot[only marks, mark=*, mark size=2pt, cBlue]
+    table[x=key, y expr=\thisrow{meanKS}*1000] {data/noise_keys.dat};
+  \draw[cGray, densely dashed] (axis cs:0.3,0) -- (axis cs:10.7,0);
+\end{groupplot}
+\end{tikzpicture}
+\caption{Output noise of the gate bootstrapping, for \NoiseKeys{} keys and
+\NoiseGates{} gates per key. (a) Histogram of the error after key switching,
+measured from the average error of its own key, compared with a Gaussian with
+the predicted variance \AvgTotal. (b) The average error of each key; the shaded
+bands show $\pm1$ and $\pm2$ predicted standard deviations of the bias of
+Eq.~\eqref{eq:ksbias}. Both are very small compared with the margin
+$\frac18=125\cdot10^{-3}$.}
+\label{fig:noise}
+\end{figure}

@@ -1,0 +1,12 @@
+% CMux as an encrypted multiplexer, and the example used by test06 and test07.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/cmux.tex}
+\caption{The CMux. (a) It chooses one of two TRLWE ciphertexts according to
+a bit $m$ that is itself encrypted, using one external product. (b) The case of
+Example~\ref{ex:cmux}: $d_0$ encrypts $\frac18$ and $d_1$ encrypts $\frac58$,
+so $d_1-d_0$ encrypts $\frac12$. The external product adds $m\cdot\frac12$ to the
+phase of $d_0$, which stays at $\frac18$ when $m=0$ and moves half a turn, to
+$\frac58$, when $m=1$. The server does the same work in both cases.}
+\label{fig:cmux}
+\end{figure}

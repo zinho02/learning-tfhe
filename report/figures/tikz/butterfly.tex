@@ -1,0 +1,31 @@
+% A DFT of size 4 computed with two rounds of butterflies (radix-2 FFT).
+\begin{tikzpicture}[font=\footnotesize, >=Stealth,
+    pt/.style={circle, fill=cNavy, inner sep=1.3pt},
+    ln/.style={->, cNavy!70, line width=0.6pt, shorten >=2pt}]
+  \def\dx{3.2}
+  \foreach \lab [count=\r from 0] in {z_0,z_2,z_1,z_3}
+    \node[pt, label=left:{$\lab$}] (a\r) at (0,-\r*0.85) {};
+  \foreach \r in {0,...,3} \node[pt] (b\r) at (\dx,-\r*0.85) {};
+  \foreach \lab [count=\r from 0] in {Z_0,Z_1,Z_2,Z_3}
+    \node[pt, label=right:{$\lab$}] (c\r) at (2*\dx,-\r*0.85) {};
+  % round 1: pairs (z0,z2) and (z1,z3)
+  \foreach \u/\v in {0/1, 2/3} {
+    \draw[ln] (a\u) -- (b\u);
+    \draw[ln] (a\v) -- (b\u);
+    \draw[ln] (a\u) -- (b\v);
+    \draw[ln] (a\v) -- node[pos=0.78, below, font=\scriptsize, cOrange!90!black] {$-$} (b\v);
+  }
+  % round 2: pairs (b0,b2) and (b1,b3), with twiddles 1 and i
+  \foreach \u/\v in {0/2, 1/3} {
+    \draw[ln] (b\u) -- (c\u);
+    \draw[ln] (b\v) -- (c\u);
+    \draw[ln] (b\u) -- (c\v);
+    \draw[ln] (b\v) -- node[pos=0.85, below, font=\scriptsize, cOrange!90!black] {$-$} (c\v);
+  }
+  \node[font=\scriptsize, cOrange!90!black, anchor=north] at (\dx,-3*0.85-0.08) {$\times i$};
+  \node[font=\scriptsize, cGray, align=center] at (0.5*\dx,0.75) {round 1:\\sizes $1\to2$};
+  \node[font=\scriptsize, cGray, align=center] at (1.5*\dx,0.75) {round 2:\\sizes $2\to4$};
+  \node[anchor=west, align=left, font=\scriptsize] at (2*\dx+0.75,-1.27)
+    {$Z_0=(z_0+z_2)+(z_1+z_3)$\\$Z_2=(z_0+z_2)-(z_1+z_3)$\\
+     $Z_1=(z_0-z_2)+i\,(z_1-z_3)$\\$Z_3=(z_0-z_2)-i\,(z_1-z_3)$};
+\end{tikzpicture}

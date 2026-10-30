@@ -1,0 +1,45 @@
+% One cell of the homomorphic ripple-carry adder.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\footnotesize, >=stealth,
+    gate/.style={draw, rounded corners=2pt, fill=cBlue!10, minimum width=1.2cm,
+                 font=\footnotesize\sffamily, inner sep=0pt},
+    wire/.style={->, line width=0.6pt},
+    bridge/.style={preaction={draw, white, line width=3.2pt}},
+    dot/.style={circle, fill, inner sep=1.1pt}]
+  % gates
+  \node[gate, minimum height=0.9cm] (x1) at (2.1, 0.7) {XOR};
+  \node[gate, minimum height=0.9cm] (x2) at (5.2, 0.55) {XOR};
+  \node[gate, minimum height=1.2cm, fill=cOrange!14] (mx) at (5.2,-1.35) {MUX};
+  % inputs
+  \node[anchor=east] at (0, 1.0)   {$y_i$};
+  \node[anchor=east] at (0, 0.4)   {$x_i$};
+  \node[anchor=east] at (0,-1.05)  {$c_i$};
+  \draw[wire] (0, 1.0) -- (1.5, 1.0);
+  \draw[wire] (0, 0.4) -- (1.5, 0.4);
+  % c_i: to the MUX (if 1) and up to the second XOR
+  \draw[wire] (0,-1.05) -- (4.6,-1.05);
+  \node[dot] at (3.9,-1.05) {};
+  \draw[wire] (3.9,-1.05) -- (3.9, 0.3) -- (4.6, 0.3);
+  % x_i: branch down to the MUX (if 0), bridging over c_i
+  \node[dot] at (0.75, 0.4) {};
+  \draw[wire, bridge] (0.75, 0.4) -- (0.75,-1.65) -- (4.6,-1.65);
+  % p_i = x_i XOR y_i: to the second XOR and to the selector
+  \draw[wire] (2.7, 0.7) -- node[above, pos=0.3] {$p_i$} (4.6, 0.7);
+  \node[dot] at (3.3, 0.7) {};
+  \draw[wire, bridge] (3.3, 0.7) -- (3.3,-0.4) -- (5.2,-0.4) -- (5.2,-0.75);
+  % MUX input labels
+  \node[font=\scriptsize, anchor=west] at (4.62,-1.05) {1};
+  \node[font=\scriptsize, anchor=west] at (4.62,-1.65) {0};
+  \node[font=\scriptsize, anchor=south west] at (5.2,-0.62) {sel};
+  % outputs
+  \draw[wire] (x2.east) -- (6.7, 0.55) node[right] {$\mathit{sum}_i$};
+  \draw[wire] (mx.east) -- (6.7,-1.35) node[right] {$c_{i+1}$};
+\end{tikzpicture}
+\caption{One column of the adder (a full adder): $\mathit{sum}_i=p_i\oplus c_i$
+and $c_{i+1}=\mathrm{MUX}(p_i;\,c_i,\,x_i)$, with $p_i=x_i\oplus y_i$. When
+$x_i=y_i$ the outgoing carry is $x_i$, whatever $c_i$ is; otherwise the incoming
+carry $c_i$ goes through. Each column uses two XOR gates and one MUX, that is,
+four blind rotations.}
+\label{fig:adder}
+\end{figure}

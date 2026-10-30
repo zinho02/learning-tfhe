@@ -1,0 +1,26 @@
+% Sample extraction for N = 4: the constant coefficient of a * s' is the inner
+% product of s' with a rearranged and partly negated copy of a.
+% Shared by the report and the slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  \def\cw{1.05}
+  \def\ch{0.5}
+  \foreach \v [count=\j from 0] in {a_0,a_1,a_2,a_3}
+    \node[draw=cNavy!40, fill=cGray!8, minimum width=\cw cm, minimum height=\ch cm] (a\j) at (\j*\cw,0) {$\v$};
+  \foreach \v/\f [count=\j from 0] in {a_0/cBlue!14,-a_3/cOrange!16,-a_2/cOrange!16,-a_1/cOrange!16}
+    \node[draw=cNavy!40, fill=\f, minimum width=\cw cm, minimum height=\ch cm] (e\j) at (\j*\cw,-1.6) {$\v$};
+  \foreach \v [count=\j from 0] in {s'_0,s'_1,s'_2,s'_3}
+    \node[draw=cNavy!40, fill=cGreen!12, minimum width=\cw cm, minimum height=\ch cm] (s\j) at (\j*\cw,-2.45) {$\v$};
+  \draw[->, cBlue, line width=0.8pt] (a0.south) -- (e0.north);
+  \draw[->, cOrange, line width=0.8pt] (a3.south) -- (e1.north);
+  \draw[->, cOrange, line width=0.8pt] (a2.south) -- (e2.north);
+  \draw[->, cOrange, line width=0.8pt] (a1.south) -- (e3.north);
+  \node[anchor=east] at (-0.7,0) {TRLWE mask $a$};
+  \node[anchor=east] at (-0.7,-1.6) {LWE mask $a'$};
+  \node[anchor=east] at (-0.7,-2.45) {LWE key $=$ coefficients of $s'$};
+  \foreach \j in {0,...,3} \node at (\j*\cw,-2.02) {$\times$};
+  \node[anchor=west, align=left] at (4*\cw-0.2,-0.8)
+    {$a\cdot s'$ has constant coefficient\\
+     $a_0s'_0\;{\color{cOrange!90!black}-\;a_3s'_1-a_2s'_2-a_1s'_3}$\\[2pt]
+     \scriptsize\color{cGray} (degrees adding up to $4=N$ wrap\\[-1pt]
+     \scriptsize\color{cGray} around with a sign flip: $X^4=-1$)};
+\end{tikzpicture}

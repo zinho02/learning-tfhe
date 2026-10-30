@@ -1,0 +1,55 @@
+% Module structure of the implementation: each header includes the ones below it.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\footnotesize, >=stealth,
+    mod/.style={draw, rounded corners=2pt, fill=#1, minimum height=0.5cm,
+                minimum width=2.4cm, inner sep=2pt, font=\footnotesize\ttfamily},
+    mod/.default=cBlue!10,
+    app/.style={mod=cGreen!14, minimum width=2.0cm},
+    dep/.style={->, cGray!85!black, line width=0.6pt},
+    ann/.style={font=\scriptsize, cGray!90!black, align=left}]
+  \def\s{0.82}
+  \node[mod=cGray!10] (torus) at (0,0)        {torus.hpp};
+  \node[mod] (lwe)   at (-2.9,2.5*\s)          {lwe.hpp};
+  \node[mod] (poly)  at ( 2.8,1*\s)            {poly.hpp};
+  \node[mod] (fft)   at ( 2.8,2*\s)            {fft.hpp};
+  \node[mod] (trlwe) at ( 2.8,3*\s)            {trlwe.hpp};
+  \node[mod] (trgsw) at ( 2.8,4*\s)            {trgsw.hpp};
+  \node[mod=cGray!10] (params) at (-2.9,5*\s)  {params.hpp};
+  \node[mod] (keys)  at (0,5*\s)               {keys.hpp};
+  \node[mod] (br)    at (0,6*\s)               {blindrotate.hpp};
+  \node[mod] (boot)  at (0,7*\s)               {bootstrap.hpp};
+  \node[mod] (gates) at (0,8*\s)               {gates.hpp};
+  \node[app] (adder) at (-1.3,9.2*\s)          {adder.cpp};
+  \node[app] (bench) at ( 1.3,9.2*\s)          {bench.cpp};
+  \draw[dep] (torus.west) -| (lwe.south);
+  \draw[dep] (torus.east) -| (poly.south);
+  \draw[dep] (poly) -- (fft);
+  \draw[dep] (fft) -- (trlwe);
+  \draw[dep] (trlwe) -- (trgsw);
+  \draw[dep] (lwe.north) |- (-0.6,4.5*\s) -- ([xshift=-0.6cm]keys.south);
+  \draw[dep] (params) -- (keys);
+  \draw[dep] (trgsw.north) |- (0.6,4.5*\s) -- ([xshift=0.6cm]keys.south);
+  \draw[dep] (keys) -- (br);
+  \draw[dep] (br) -- (boot);
+  \draw[dep] (boot) -- (gates);
+  \draw[dep] (gates) -- (adder);
+  \draw[dep] (gates) -- (bench);
+  \node[ann, anchor=west] at (4.15,0)       {$\mathbb{T}$ as \texttt{uint32\_t}, encoding, sampling};
+  \node[ann, anchor=west] at (4.15,1*\s)    {$\mathbb{Z}_N[X]$, $\mathbb{T}_N[X]$, product by $X^e$};
+  \node[ann, anchor=west] at (4.15,2*\s)    {negacyclic FFT};
+  \node[ann, anchor=west] at (4.15,3*\s)    {TRLWE samples};
+  \node[ann, anchor=west] at (4.15,4*\s)    {gadget, TRGSW, $\boxdot$, CMux};
+  \node[ann, right=6pt of br]    {modulus switching, blind rotation, extraction};
+  \node[ann, right=6pt of boot]  {key switching, bootstrapping, bit encoding};
+  \node[ann, right=6pt of gates] {NAND, AND, OR, NOR, XOR, XNOR, NOT, MUX};
+  \node[ann, anchor=east] at (-4.2,2.5*\s) {LWE samples};
+  \node[ann, anchor=east] at (-4.2,5*\s)   {parameter set};
+  \node[ann, right=6pt of keys] {secret and evaluation keys};
+\end{tikzpicture}
+\caption{Structure of the library. Each box is a header file in \texttt{src/}
+with its own unit test in \texttt{tests/}; an arrow goes from a header to the
+headers that include it. The programs in \texttt{apps/} only use
+\texttt{gates.hpp}.}
+\label{fig:arch}
+\end{figure}

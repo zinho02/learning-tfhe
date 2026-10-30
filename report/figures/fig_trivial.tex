@@ -1,0 +1,14 @@
+% The test polynomial is public: it enters blind rotation as a trivial sample.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/trivial.tex}
+\caption{The test polynomial is not encrypted. Blind rotation starts from the
+trivial TRLWE ciphertext $(0,X^{-\bar b}v)$. Its mask is zero, so its phase is
+the public polynomial $X^{-\bar b}v$ under any key (here $N=4$, $\bar b=6$ and
+the gate test polynomial, as in Example~\ref{ex:blindrot}). The first CMux adds
+an external product with a ciphertext of the bootstrapping key, which is a
+real encryption under $s'$. After it, the accumulator has a random mask and
+some noise, and without the key one cannot see whether it was rotated (here by
+$X^{3}$).}
+\label{fig:trivial}
+\end{figure}

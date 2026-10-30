@@ -1,0 +1,18 @@
+% Bootstrapping resets the noise: a deliberately noisy encryption of +1/8 and
+% the output of its bootstrapping (unit test test09). Shared by report and slides.
+\begin{tikzpicture}
+\begin{axis}[width=11.5cm, height=4.6cm, xmin=0.075, xmax=0.175, ymin=0, ymax=150,
+    axis lines=left, xlabel={phase}, ylabel={density},
+    xtick={0.1,0.125,0.15}, xticklabels={$0.100$,$\frac18$,$0.150$},
+    ytick=\empty, tick label style={font=\footnotesize}, label style={font=\small},
+    legend style={font=\scriptsize, at={(0.99,0.97)}, anchor=north east, draw=none,
+                  fill=white, fill opacity=0.85, text opacity=1},
+    legend cell align=left, clip=false]
+  \addplot[cOrange, line width=1.2pt, domain=0.075:0.175, samples=161]
+    {exp(-(x-0.125)^2/(2*\BootSdInRaw^2))/(\BootSdInRaw*sqrt(2*pi))};
+  \addlegendentry{input, $\sigma=\BootSdIn$}
+  \addplot[cBlue, line width=1.2pt, fill=cBlue!15, domain=0.11:0.14, samples=161, visible on=<2->]
+    {exp(-(x-0.125)^2/(2*\BootSdOutRaw^2))/(\BootSdOutRaw*sqrt(2*pi))};
+  \addlegendentry{after bootstrapping, $\sigma=\BootSdOut$}
+\end{axis}
+\end{tikzpicture}

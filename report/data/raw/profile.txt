@@ -1,0 +1,9 @@
+part us
+fft-forward 6299.2
+fft-backward 2972.7
+pointwise 4803.2
+decompose 1577.6
+rotate 195.3
+keyswitch 768.1
+other 5583.6
+total 22199.7

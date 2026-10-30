@@ -1,0 +1,37 @@
+% The plan of TFHE's bootstrapping: a lookup table stored in a polynomial,
+% rotated by the encrypted phase, read at position 0. Shared by report and slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  % ---------------- encrypted phase ----------------
+  \def\rad{1.05}
+  \draw[line width=0.9pt] (0,0) circle (\rad);
+  \foreach \k in {0,...,15} \draw[cGray] (\k*22.5:\rad-0.06) -- (\k*22.5:\rad+0.06);
+  \fill[cGreen] (70:\rad) circle (2.6pt);
+  \node[cGreen!75!black, anchor=south] at (70:\rad+0.08) {$\varphi$};
+  \node[align=center, font=\scriptsize] at (0,-\rad-0.42) {encrypted phase\\(LWE ciphertext)};
+  % ---------------- the table ----------------
+  \def\cw{0.66}
+  \begin{scope}[shift={(3.2,0.75)}]
+    \foreach \j in {0,...,7}
+      \node[draw=cNavy!45, fill=cBlue!14, minimum width=\cw cm, minimum height=0.48cm,
+            inner sep=0pt] (t\j) at (\j*\cw,0) {$v_{\j}$};
+    \node[anchor=west, align=left, font=\scriptsize] at (8*\cw-0.1,0)
+      {test polynomial $v$:\\one answer per position};
+  \end{scope}
+  \begin{scope}[shift={(3.2,-0.85)}, visible on=<3->]
+    \foreach \v/\f [count=\j from 0] in {v_3/cBlue!14, v_4/cBlue!14, v_5/cBlue!14,
+        v_6/cBlue!14, v_7/cBlue!14, -v_0/cOrange!16, -v_1/cOrange!16, -v_2/cOrange!16}
+      \node[draw=cNavy!45, fill=\f, minimum width=\cw cm, minimum height=0.48cm,
+            inner sep=0pt] (r\j) at (\j*\cw,0) {$\v$};
+    \draw[cGreen!70!black, line width=1.3pt] (-0.5*\cw,-0.24) rectangle (0.5*\cw,0.24);
+    \node[anchor=west, align=left, font=\scriptsize] at (8*\cw-0.1,0)
+      {$X^{-\bar\varphi}\cdot v$: the answer\\for $\bar\varphi=3$ is now first};
+  \end{scope}
+  % ---------------- the three steps ----------------
+  \draw[->, line width=0.8pt, cNavy!80, visible on=<2->] (1.25,0.45) -- node[above, sloped, font=\scriptsize] {\ding{172} round} (2.75,0.65);
+  \node[visible on=<2->, font=\scriptsize, cGray] at (2.05,0.05) {$\bar\varphi=3$};
+  \draw[->, line width=0.8pt, cNavy!80, visible on=<3->] (3.2+3.5*\cw,0.48) -- (3.2+3.5*\cw,-0.58)
+    node[midway, right, font=\scriptsize, align=left] {\ding{173} rotate by $X^{-\bar\varphi}$\\
+      \emph{without} knowing $\bar\varphi$};
+  \draw[->, line width=0.8pt, cGreen!70!black, visible on=<4->] (3.2,-1.1) -- (3.2,-1.75)
+    node[below, align=center, font=\scriptsize] {\ding{174} read position 0: an\\encryption of $v_{\bar\varphi}$};
+\end{tikzpicture}

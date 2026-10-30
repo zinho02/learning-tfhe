@@ -1,0 +1,53 @@
+% Phases at the input of the bootstrapping for NAND and XOR.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\small]
+  \def\R{1.65}
+  % ---------------- (a) NAND ----------------
+  \begin{scope}
+    \fill[cBlue!14] (0,0) -- (\R,0) arc (0:180:\R) -- cycle;
+    \fill[cOrange!16] (0,0) -- (-\R,0) arc (180:360:\R) -- cycle;
+    \draw[line width=0.9pt] (0,0) circle (\R);
+    \draw[cGray, densely dotted] (-\R-0.1,0) -- (\R+0.1,0);
+    \fill[cBlue] (135:\R) circle (2.3pt);
+    \fill[cBlue] (45:\R) circle (2.3pt);
+    \fill[cOrange] (-45:\R) circle (2.3pt);
+    \node[anchor=south east, font=\footnotesize, align=right] at (135:\R+0.02)
+      {$+\tfrac38$: $(0,0)$};
+    \node[anchor=south west, font=\footnotesize, align=left] at (45:\R+0.02)
+      {$+\tfrac18$: $(0,1),(1,0)$};
+    \node[anchor=north west, font=\footnotesize] at (-45:\R+0.02) {$-\tfrac18$: $(1,1)$};
+    \node[font=\footnotesize, cBlue!80!black] at (0,0.55) {output $+\tfrac18$};
+    \node[font=\footnotesize, cOrange!80!black] at (0,-0.55) {output $-\tfrac18$};
+    \node[right, font=\scriptsize] at (\R+0.1,0) {$0$};
+    \node[left, font=\scriptsize] at (-\R-0.1,0) {$\tfrac12$};
+    \node[font=\footnotesize] at (0,-\R-1.0) {$\varphi\big((0,\tfrac18)-c_x-c_y\big)$};
+    \node at (-\R-1.2, 0.9) {(a)};
+  \end{scope}
+  % ---------------- (b) XOR ----------------
+  \begin{scope}[xshift=7.6cm]
+    \fill[cBlue!14] (0,0) -- (\R,0) arc (0:180:\R) -- cycle;
+    \fill[cOrange!16] (0,0) -- (-\R,0) arc (180:360:\R) -- cycle;
+    \draw[line width=0.9pt] (0,0) circle (\R);
+    \draw[cGray, densely dotted] (-\R-0.1,0) -- (\R+0.1,0);
+    \fill[cBlue] (90:\R) circle (2.3pt);
+    \fill[cOrange] (-90:\R) circle (2.3pt);
+    \node[above, font=\footnotesize] at (90:\R+0.02) {$+\tfrac14$: $(0,1),(1,0)$};
+    \node[below, font=\footnotesize, align=center] at (-90:\R+0.02)
+      {$\tfrac12+\tfrac14=-\tfrac14$: $(0,0),(1,1)$};
+    \node[font=\footnotesize, cBlue!80!black] at (0,0.55) {output $+\tfrac18$};
+    \node[font=\footnotesize, cOrange!80!black] at (0,-0.55) {output $-\tfrac18$};
+    \node[right, font=\scriptsize] at (\R+0.1,0) {$0$};
+    \node[left, font=\scriptsize] at (-\R-0.1,0) {$\tfrac12$};
+    \node[font=\footnotesize] at (0,-\R-1.0) {$\varphi\big((0,\tfrac14)+2(c_x+c_y)\big)$};
+    \node at (-\R-1.2, 0.9) {(b)};
+  \end{scope}
+\end{tikzpicture}
+\caption{Phases at the input of the bootstrapping, without noise. (a) NAND:
+every point is at distance $\frac18$ from the closest boundary ($0$ or
+$\frac12$); this distance is the noise margin. (b) XOR: with $c_x+c_y$, different
+inputs would fall on the boundary. After doubling, the two cases with equal
+inputs fall on the same point $\pm\frac12$, and adding $\frac14$ separates the
+two groups with a margin of $\frac14$.}
+\label{fig:gates}
+\end{figure}

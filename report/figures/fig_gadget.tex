@@ -1,0 +1,55 @@
+% The offset trick for the signed gadget decomposition, on t = 0.7 with
+% Bg = 2^7 and ell = 3.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\footnotesize, >=stealth]
+  \def\u{0.29}
+  \def\h{0.5}
+  % one 32-bit word split in fields of 7, 7, 7 and 11 bits (MSB on the left)
+  \newcommand{\word}[6]{%
+    \fill[#2] (0,#1) rectangle (21*\u,#1+\h);
+    \fill[cGray!10] (21*\u,#1) rectangle (32*\u,#1+\h);
+    \draw (0,#1) rectangle (32*\u,#1+\h);
+    \foreach \b in {7,14,21} \draw (\b*\u,#1) -- (\b*\u,#1+\h);
+    \node at (3.5*\u,#1+0.5*\h) {#3};
+    \node at (10.5*\u,#1+0.5*\h) {#4};
+    \node at (17.5*\u,#1+0.5*\h) {#5};
+    \node at (26.5*\u,#1+0.5*\h) {#6};
+  }
+  \node[cGray!90!black] at (3.5*\u, 0.8) {$d_1$ field};
+  \node[cGray!90!black] at (10.5*\u,0.8) {$d_2$ field};
+  \node[cGray!90!black] at (17.5*\u,0.8) {$d_3$ field};
+  \node[cGray!90!black] at (26.5*\u,0.8) {11 rounded bits};
+  \word{0}{cBlue!10}{$89$}{$76$}{$102$}{$819$}
+  \word{-0.7}{cGray!6}{$64$}{$64$}{$64$}{$2^{10}$}
+  \draw[line width=0.6pt] (-0.1,-0.85) -- (32*\u+0.1,-0.85);
+  \word{-2.1}{cGreen!12}{$26$}{$13$}{$38$}{$1843$}
+  \word{-2.95}{cOrange!14}{$-38$}{$-51$}{$-26$}{---}
+  % carries between fields
+  \foreach \b in {21,14,7} {
+    \draw[->, cRed, line width=0.7pt] (\b*\u+0.32,-1.5) to[bend right=50]
+      node[above=-1pt, font=\scriptsize] {$+1$} (\b*\u-0.32,-1.5);
+  }
+  \draw[->, cRed, line width=0.7pt] (0.32,-1.5) to[bend right=50]
+    node[above=-1pt, font=\scriptsize] {$+1$} (-0.32,-1.5);
+  \node[cRed, font=\scriptsize, anchor=east] at (-0.38,-1.45) {lost (mod $1$)};
+  % row labels
+  \begin{scope}[every node/.style={anchor=east, font=\footnotesize}]
+    \node at (-0.25, 0.25)  {$t=\texttt{0xB3333333}$};
+    \node at (-0.25,-0.45)  {$+\ \mathit{offset}=\texttt{0x81020400}$};
+    \node at (-0.25,-1.85)  {$t+\mathit{offset}=\texttt{0x34353733}$};
+    \node at (-0.25,-2.7)   {digit $-\,B_g/2$};
+  \end{scope}
+  \node[anchor=north, align=center, font=\footnotesize] at (16*\u,-3.2)
+    {$-\tfrac{38}{2^{7}}-\tfrac{51}{2^{14}}-\tfrac{26}{2^{21}}=-0.3000002\equiv0.6999998$,
+     \quad error $1.9\cdot10^{-7}\le2^{-22}$};
+\end{tikzpicture}
+\caption{The offset trick for $t=0.7$, with $\Bg=2^7$ and $\ell=3$. The offset
+has $64$ in each $7$-bit digit group and half of the last digit ($2^{10}$) in
+the part that is thrown away. After one 32-bit addition, each digit is
+obtained with a shift and a mask, and subtracting $64$ gives signed digits in
+$[-64,64)$. The ordinary digits of $t$ are $(89,76,102)$; the carries of the
+addition (red) make each digit that is $64$ or more negative and add $1$ to the
+digit on its left.}
+\label{fig:gadget}
+\end{figure}

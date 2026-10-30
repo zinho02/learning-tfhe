@@ -1,0 +1,46 @@
+% Data flow of the external product with the bootstrapping key in the FFT domain.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\footnotesize, >=stealth,
+    box/.style={draw, rounded corners=2pt, fill=#1, minimum height=0.5cm,
+                inner sep=2pt, align=center},
+    box/.default=white,
+    flow/.style={->, line width=0.6pt}]
+  \node[box=cGray!8, minimum height=2.6cm, text width=1.3cm] (d) at (0,0)
+    {TRLWE\\$d=(a,b)$};
+  \node[box=cBlue!10, text width=1.6cm] (deca) at (2.45, 0.9) {decompose $a$};
+  \node[box=cBlue!10, text width=1.6cm] (decb) at (2.45,-0.9) {decompose $b$};
+  \draw[flow] (d.east |- deca) -- (deca);
+  \draw[flow] (d.east |- decb) -- (decb);
+  \foreach \i/\y in {1/1.5, 2/0.9, 3/0.3} {
+    \node[box=cGreen!12] (fu\i) at (5.05,\y) {FFT$(u_{\i})$};
+    \draw[flow] (deca.east) -- (fu\i.west);
+  }
+  \foreach \i/\y in {1/-0.3, 2/-0.9, 3/-1.5} {
+    \node[box=cGreen!12] (fw\i) at (5.05,\y) {FFT$(w_{\i})$};
+    \draw[flow] (decb.east) -- (fw\i.west);
+  }
+  \node[box=cOrange!14, minimum height=3.5cm, text width=2.15cm] (mac) at (8.35,0)
+    {multiply and add\\value by value\\with the $2\ell$ rows\\of $\mathrm{BK}_i$\\(stored as FFT)\\[3pt]
+     sums\\$\hat A,\ \hat B$};
+  \foreach \n in {fu1,fu2,fu3,fw1,fw2,fw3} \draw[flow] (\n.east) -- (\n.east -| mac.west);
+  \node[box=cGreen!12] (ia) at (11.15, 0.6) {IFFT$(\hat A)$};
+  \node[box=cGreen!12] (ib) at (11.15,-0.6) {IFFT$(\hat B)$};
+  \draw[flow] (mac.east |- ia) -- (ia);
+  \draw[flow] (mac.east |- ib) -- (ib);
+  \node[box=cGray!8, minimum height=2.6cm, text width=1.3cm] (r) at (13.4,0)
+    {TRLWE\\$\mathrm{BK}_i\boxdot d$};
+  \draw[flow] (ia.east) -- (ia.east -| r.west);
+  \draw[flow] (ib.east) -- (ib.east -| r.west);
+  \node[font=\scriptsize, cGray!90!black] at (5.05,-2.15) {$2\ell=6$ forward};
+  \node[font=\scriptsize, cGray!90!black] at (8.35,-2.15) {$4\ell=12$ products};
+  \node[font=\scriptsize, cGray!90!black] at (11.15,-2.15) {$2$ backward};
+\end{tikzpicture}
+\caption{One external product in our implementation. The digit polynomials
+of both components are transformed once and multiplied by the rows of the
+TRGSW ciphertext, which were transformed when the key was created. The
+products are added up in the frequency domain, so each external product needs
+only two inverse transforms. Blind rotation does one external product for each
+nonzero $\bar a_i$, about $n=630$ per gate.}
+\label{fig:extprod}
+\end{figure}

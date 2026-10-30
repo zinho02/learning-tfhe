@@ -1,0 +1,38 @@
+% The chain of concepts followed by the report (Sections 2 and 3).
+\begin{tikzpicture}[font=\footnotesize, >=Stealth,
+    con/.style={draw=cNavy!45, rounded corners=3pt, align=center, inner sep=3pt,
+                minimum height=1.05cm, text width=3.25cm},
+    stp/.style={draw=cNavy!45, rounded corners=3pt, align=center, inner sep=3pt,
+                minimum height=0.95cm, text width=2.35cm, fill=cOrange!10, font=\scriptsize},
+    sec/.style={font=\scriptsize\bfseries, cGray, roadmap sec/.try},
+    flow/.style={->, line width=0.7pt, cNavy!70}]
+  \node[con, fill=cGray!8]  (torus) at (0,0)    {\textbf{Torus}\\points on a circle;\\noise removed by\\rounding};
+  \node[con, fill=cBlue!8]  (lwe)   at (3.7,0)  {\textbf{LWE}\\mask + noise;\\supports addition};
+  \node[con, fill=cRed!7]   (lim)   at (7.4,0)  {\textbf{Two problems}\\no products,\\noise keeps growing};
+  \node[con, fill=cGreen!9] (plan)  at (11.1,0) {\textbf{The plan}\\bootstrapping as a\\rotated lookup table};
+  \node[con, fill=cBlue!8]  (trlwe) at (7.4,-1.75)  {\textbf{TRLWE}\\tables that can\\be rotated};
+  \node[con, fill=cBlue!8]  (trgsw) at (11.1,-1.75) {\textbf{TRGSW, CMux}\\multiply by an\\encrypted bit};
+  \node[stp] (ms) at (0,-3.6)    {modulus switching,\\test polynomial};
+  \node[stp] (br) at (2.85,-3.6) {blind rotation};
+  \node[stp] (se) at (5.7,-3.6)  {sample extraction};
+  \node[stp] (ks) at (8.55,-3.6) {key switching};
+  \node[stp, fill=cGreen!12] (gt) at (11.4,-3.6) {gates and\\an adder};
+  \draw[flow] (torus) -- (lwe);
+  \draw[flow] (lwe) -- (lim);
+  \draw[flow] (lim) -- (plan);
+  \draw[flow] (plan.south) ++(-0.9,0) -- ++(0,-0.2) -| (trlwe.north);
+  \draw[flow] (plan) -- (trgsw);
+  \draw[flow] (trlwe.west) -| (br.north);
+  \draw[flow] (trgsw.south) |- ++(0,-0.35) -| ([xshift=4pt]br.north);
+  \draw[flow] (ms) -- (br);
+  \draw[flow] (br) -- (se);
+  \draw[flow] (se) -- (ks);
+  \draw[flow] (ks) -- (gt);
+  \node[sec, anchor=south west] at (torus.north west) {\S2.1};
+  \node[sec, anchor=south west] at (lwe.north west) {\S2.2};
+  \node[sec, anchor=south west] at (lim.north west) {\S2.3};
+  \node[sec, anchor=south west] at (plan.north west) {\S2.4};
+  \node[sec, anchor=south west] at (trlwe.north west) {\S2.5};
+  \node[sec, anchor=south east] at (trgsw.north east) {\S2.6};
+  \node[sec, anchor=north] at (5.7,-4.15) {\S3: one gate, step by step};
+\end{tikzpicture}

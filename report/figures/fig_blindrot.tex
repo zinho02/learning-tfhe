@@ -1,0 +1,14 @@
+% Blind rotation step by step, for n = 3 and N = 4.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/blindrot.tex}
+\caption{The blind rotation of Example~\ref{ex:blindrot} ($n=3$, $N=4$,
+$s=(1,0,1)$, $\bar b=6$, $\bar{\mathbf a}=(3,5,2)$) for any test polynomial
+$v=v_0+v_1X+v_2X^2+v_3X^3$. Each row is the message of the accumulator (the
+coefficients of the polynomial it encrypts) after one CMux. The server does
+the same three CMux operations whatever $s$ is; only the key decides which of
+them rotate. The final constant coefficient is $v_{\bar\varphi}=v_1$. With the
+gate test polynomial ($v_j=\mu$), the rows are the ones in the table of the
+example.}
+\label{fig:blindrot}
+\end{figure}

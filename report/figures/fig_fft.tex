@@ -1,0 +1,33 @@
+% Folding and twisting: a negacyclic product of size N becomes a cyclic FFT of size N/2.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[font=\footnotesize, >=stealth,
+    c/.style={draw, minimum width=0.5cm, minimum height=0.55cm, inner sep=0pt, fill=#1},
+    c/.default=white,
+    fstep/.style={->, line width=0.8pt},
+    note/.style={font=\scriptsize, align=center, cGray!90!black}]
+  \foreach \j in {0,...,3} \node[c=cBlue!12] (p\j) at (\j*0.5, 0) {$p_{\j}$};
+  \foreach \j in {4,...,7} \node[c=cOrange!14] (p\j) at (\j*0.5, 0) {$p_{\j}$};
+  \node[note, anchor=north] at (1.75,-0.4) {$N$ real coefficients};
+  \begin{scope}[xshift=5.0cm]
+    \foreach \j in {0,...,3} {
+      \pgfmathtruncatemacro{\k}{\j+4}
+      \node[c=cGreen!12, minimum width=1.2cm, font=\scriptsize] (z\j) at (\j*1.2, 0)
+        {$p_{\j}+i\,p_{\k}$};
+    }
+    \node[note, anchor=north] at (1.8,-0.4) {$N/2$ complex values $z_j$};
+  \end{scope}
+  \draw[fstep] (3.95,0) -- node[above, note] {fold} (4.35,0);
+  \node[draw, rounded corners=2pt, fill=cGray!8, align=center, inner sep=4pt]
+    (tw) at (11.75,0) {twist $z_j\,e^{i\pi j/N}$\\[1pt]FFT of size $N/2$};
+  \draw[fstep] (z3.east) -- (tw.west);
+  \node[note, anchor=north] at (11.75,-0.75)
+    {$=p(\omega_k)$, \ $\omega_k=e^{i\pi(4k+1)/N}$};
+\end{tikzpicture}
+\caption{Forward negacyclic transform, drawn for $N=8$. The two halves of the
+coefficient vector are folded into $N/2$ complex numbers, which are multiplied
+by the twist factors $e^{i\pi j/N}$. A standard FFT of size $N/2$ then gives
+the values of $p$ at one root of $X^N+1$ from each conjugate pair. The inverse
+transform does the same steps in reverse order.}
+\label{fig:fft}
+\end{figure}

@@ -1,0 +1,20 @@
+% Roots of X^8 + 1 on the unit circle: the four evaluation points of the
+% negacyclic FFT and their conjugates. Shared by the report and the slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  \def\rad{1.65}
+  \draw[->, cGray] (-2.3,0) -- (2.4,0) node[right] {Re};
+  \draw[->, cGray] (0,-2.2) -- (0,2.3) node[above] {Im};
+  \draw[cNavy!60, line width=0.8pt] (0,0) circle (\rad);
+  \foreach \a/\b in {22.5/337.5, 112.5/247.5, 202.5/157.5, 292.5/67.5}
+    \draw[cGray, densely dotted] (\a:\rad) -- (\b:\rad);
+  \foreach \a/\k in {22.5/0, 112.5/1, 202.5/2, 292.5/3} {
+    \fill[cBlue] (\a:\rad) circle (2.8pt);
+    \node[cBlue!85!black] at (\a:\rad+0.42) {$\omega_{\k}$};
+  }
+  \foreach \a/\k in {337.5/0, 247.5/1, 157.5/2, 67.5/3} {
+    \draw[cOrange, fill=white, line width=0.9pt] (\a:\rad) circle (2.6pt);
+    \node[cOrange!85!black] at (\a:\rad+0.42) {$\bar\omega_{\k}$};
+  }
+  \draw[cGray] (0.6,0) arc (0:22.5:0.6);
+  \node[cGray, font=\scriptsize] at (11:0.95) {$\frac{\pi}{8}$};
+\end{tikzpicture}

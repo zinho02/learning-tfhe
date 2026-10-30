@@ -1,0 +1,32 @@
+% What the coefficients v_j of the test polynomial mean, for N = 4: each of the
+% 2N slices of the torus is labeled with the output that the bootstrapping
+% returns for phases in that slice. (a) any v; (b) the gate test polynomial;
+% (c) v_j = j/8. Shared by the report and the slides.
+\begin{tikzpicture}[font=\footnotesize]
+  \def\rad{1.42}
+  % \wheel{x shift}{labels of the 8 slices}{title}{polynomial}{overlay}
+  \def\wheel#1#2#3#4#5{%
+    \begin{scope}[xshift=#1cm, visible on=#5]
+      \foreach \lab [count=\k from 0] in {#2} {
+        \pgfmathsetmacro{\aa}{\k*45-22.5}
+        \pgfmathsetmacro{\bb}{\k*45+22.5}
+        \ifnum\k<4
+          \fill[cBlue!14] (0,0) -- (\aa:\rad) arc (\aa:\bb:\rad) -- cycle;
+        \else
+          \fill[cOrange!16] (0,0) -- (\aa:\rad) arc (\aa:\bb:\rad) -- cycle;
+        \fi
+        \draw[white, line width=1pt] (0,0) -- (\aa:\rad);
+        \node at (\k*45:0.66*\rad) {\lab};
+        \node[font=\scriptsize, cGray] at (\k*45:\rad+0.24) {\k};
+      }
+      \draw[cNavy, line width=0.9pt] (0,0) circle (\rad);
+      \fill[cNavy] (0,0) circle (0.8pt);
+      \node[anchor=north, align=center] at (0,-\rad-0.38) {#3\\[1pt]#4};
+    \end{scope}}
+  \wheel{0}{$v_0$,$v_1$,$v_2$,$v_3$,$-v_0$,$-v_1$,$-v_2$,$-v_3$}
+        {\textbf{(a)} any test polynomial}{$v=v_0+v_1X+v_2X^2+v_3X^3$}{<1->}
+  \wheel{4.75}{$+\frac18$,$+\frac18$,$+\frac18$,$+\frac18$,$-\frac18$,$-\frac18$,$-\frac18$,$-\frac18$}
+        {\textbf{(b)} gates: all $v_j=\frac18$}{$v=\frac18(1+X+X^2+X^3)$}{<2->}
+  \wheel{9.5}{$0$,$\frac18$,$\frac14$,$\frac38$,$0$,$-\frac18$,$-\frac14$,$-\frac38$}
+        {\textbf{(c)} $v_j=j/8$}{$v=\frac18X+\frac14X^2+\frac38X^3$}{<3->}
+\end{tikzpicture}

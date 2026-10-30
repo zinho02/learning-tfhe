@@ -1,0 +1,13 @@
+% A TRGSW sample as a 2*ell x 2 array and the external product as a weighted
+% sum of its rows.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/trgsw.tex}
+\caption{A TRGSW ciphertext of $m$, drawn as $2\ell=6$ TRLWE rows
+$(a_r,b_r)$ that encrypt zero, plus the gadget terms (orange). The external
+product multiplies each row by one digit polynomial, $u_i$ for the digits of
+$a$ and $w_i$ for the digits of $b$, and adds the six rows. Adding the phases on
+the right, the gadget terms rebuild $m(b-a\,s')$ from the digits, while the
+noise is only multiplied by small digits.}
+\label{fig:trgsw}
+\end{figure}

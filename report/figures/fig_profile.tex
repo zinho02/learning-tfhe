@@ -1,0 +1,32 @@
+% Cost breakdown of one NAND gate, from the isolated timing of each primitive.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    xbar, bar width=0.42cm, width=0.6\textwidth, height=6.2cm,
+    xmin=0, enlarge y limits=0.1, enlarge x limits={upper, value=0.22},
+    xlabel={time per gate (ms)},
+    ytick={0,...,6},
+    yticklabels={{decomposition}, {rotation by $X^{\bar a_i}$, add/sub},
+                 {key switching}, {other (temporaries, memory)},
+                 {backward FFTs ($2n$)}, {value-by-value products ($4\ell n$)},
+                 {forward FFTs ($2\ell n$)}},
+    yticklabel style={font=\footnotesize},
+    tick label style={font=\footnotesize}, label style={font=\small},
+    xmajorgrids, grid style={cGray!20},
+    point meta=explicit symbolic,
+    nodes near coords={\pgfmathprintnumber[fixed,precision=1]{\pgfplotspointmeta}\,\%},
+    nodes near coords style={font=\scriptsize, anchor=west},
+  ]
+  \addplot[fill=cBlue!70, draw=cBlue!90!black]
+    table[x=ms, y=y, meta=pct] {data/profile.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Where the time of a NAND gate goes. We measured each operation on its
+own and multiplied its time by the number of times it runs per gate;
+percentages are relative to the measured time of a gate. The value-by-value
+products are measured with the TRGSW rows read from main memory, as in the
+blind rotation. ``Other'' is the measured gate time minus all the listed
+parts.}
+\label{fig:profile}
+\end{figure}

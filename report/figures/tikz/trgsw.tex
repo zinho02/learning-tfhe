@@ -1,0 +1,39 @@
+% A TRGSW sample as 2*ell TRLWE rows, and the external product as a weighted
+% sum of rows by the gadget digits. Shared by the report and the slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth,
+    cell/.style={draw=cNavy!45, minimum height=0.52cm, inner sep=1pt}]
+  \def\dy{0.6}
+  \node[font=\scriptsize, cGray] at (0,0.62) {digit};
+  \node[font=\scriptsize, cGray] at (2.75,0.62) {first component};
+  \node[font=\scriptsize, cGray] at (5.75,0.62) {second component};
+  \node[font=\scriptsize, cGray, anchor=west] at (7.5,0.62) {phase of the row};
+  \foreach \i in {1,2,3} {
+    \pgfmathsetmacro{\y}{-(\i-1)*\dy}
+    \node[cell, fill=cBlue!14, minimum width=0.75cm] at (0,\y) {$u_{\i}$};
+    \node at (0.75,\y) {$\times$};
+    \node[cell, fill=white, minimum width=2.7cm] at (2.75,\y)
+      {$a_{\i}+{\color{cOrange!90!black}\frac{m}{\Bg^{\i}}}$};
+    \node[cell, fill=white, minimum width=2.7cm] at (5.75,\y) {$b_{\i}$};
+    \node[anchor=west] at (7.5,\y) {$e_{\i}-{\color{cOrange!90!black}m\,s'/\Bg^{\i}}$};
+  }
+  \foreach \i in {1,2,3} {
+    \pgfmathsetmacro{\y}{-(\i+2)*\dy-0.15}
+    \pgfmathtruncatemacro{\r}{\i+3}
+    \node[cell, fill=cGreen!14, minimum width=0.75cm] at (0,\y) {$w_{\i}$};
+    \node at (0.75,\y) {$\times$};
+    \node[cell, fill=white, minimum width=2.7cm] at (2.75,\y) {$a_{\r}$};
+    \node[cell, fill=white, minimum width=2.7cm] at (5.75,\y)
+      {$b_{\r}+{\color{cOrange!90!black}\frac{m}{\Bg^{\i}}}$};
+    \node[anchor=west] at (7.5,\y) {$e_{\r}+{\color{cOrange!90!black}m/\Bg^{\i}}$};
+  }
+  \draw[decorate, decoration={brace, amplitude=5pt}, cBlue]
+    (-0.5,-1.35) -- (-0.5,0.3) node[midway, left=6pt, align=right] {digits\\of $a$};
+  \draw[decorate, decoration={brace, amplitude=5pt}, cGreen]
+    (-0.5,-3.3) -- (-0.5,-1.65) node[midway, left=6pt, align=right] {digits\\of $b$};
+  \draw[line width=0.7pt] (1.3,-3.62) -- (7.2,-3.62);
+  \node[anchor=north, align=center] at (4.25,-3.68)
+    {$\sum$ of the weighted rows: phase
+     $\;m\Big(\underbrace{\textstyle\sum_iw_i\Bg^{-i}}_{\approx b}
+       -s'\underbrace{\textstyle\sum_iu_i\Bg^{-i}}_{\approx a}\Big)
+       +\underbrace{\textstyle\sum_i(u_ie_i+w_ie_{3+i})}_{\text{small: digits}\,\le\,64}$};
+\end{tikzpicture}

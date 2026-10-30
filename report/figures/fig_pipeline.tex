@@ -1,0 +1,43 @@
+% The four stages of a bootstrapped gate and the two parts of the evaluation key.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}[
+    font=\footnotesize, >=stealth,
+    stage/.style={draw, rounded corners=2pt, line width=0.7pt, fill=#1,
+                  minimum height=1.05cm, text width=1.75cm, align=center,
+                  inner sep=2pt},
+    stage/.default=cBlue!10,
+    kbox/.style={draw, densely dashed, rounded corners=2pt, fill=cGray!8,
+                text width=3.3cm, align=center, font=\footnotesize,
+                inner sep=3pt},
+    lbl/.style={font=\scriptsize, align=center, cGray!90!black},
+    flow/.style={->, line width=0.8pt}]
+  \node[stage=cGray!6, text width=0.9cm] (in) {$c_1, c_2$};
+  \node[stage, right=1.0cm of in]  (lin) {linear\\combination};
+  \node[stage, right=1.0cm of lin] (br)  {blind\\rotation};
+  \node[stage, right=1.0cm of br]  (se)  {sample\\extraction};
+  \node[stage, right=1.0cm of se]  (ks)  {key\\switching};
+  \node[stage=cGray!6, text width=0.9cm, right=1.0cm of ks] (out) {$c$};
+  \draw[flow] (in)  -- node[lbl, above] {LWE} node[lbl, below] {$s,\,n$} (lin);
+  \draw[flow] (lin) -- node[lbl, above] {LWE} node[lbl, below] {$s,\,n$} (br);
+  \draw[flow] (br)  -- node[lbl, above] {TRLWE} node[lbl, below] {$s',\,N$} (se);
+  \draw[flow] (se)  -- node[lbl, above] {LWE} node[lbl, below] {$s',\,N$} (ks);
+  \draw[flow] (ks)  -- node[lbl, above] {LWE} node[lbl, below] {$s,\,n$} (out);
+  \node[kbox, below=0.75cm of br] (bk) {bootstrapping key\\$n$ TRGSW ciphertexts of $s_i$ under $s'$};
+  \node[kbox, below=0.75cm of ks] (ksk) {key-switching key\\$N t\,B_{\mathrm{ks}}$ LWE ciphertexts under $s$};
+  \draw[->, densely dashed, cGray] (bk) -- (br);
+  \draw[->, densely dashed, cGray] (ksk) -- (ks);
+  \node[lbl, above=1pt of lin] {cheap, adds noise};
+  \node[lbl, above=1pt of br] {$>95\%$ of the time};
+  \node[lbl, above=1pt of se] {free, no noise};
+  \node[lbl, above=1pt of ks] {changes key};
+\end{tikzpicture}
+\caption{The path of a bootstrapped gate. The two input ciphertexts are
+combined linearly; blind rotation computes the gate on the encrypted phase and
+gives a TRLWE ciphertext with fresh noise; sample extraction reads its constant
+coefficient as an LWE ciphertext under the key $s'$, of size $N$; and key
+switching brings it back to the key $s$, of size $n$, so that it can be used by
+the next gate. The dashed boxes are the two parts of the public evaluation key
+that the server has.}
+\label{fig:pipeline}
+\end{figure}

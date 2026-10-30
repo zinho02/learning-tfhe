@@ -1,0 +1,13 @@
+% One slice of the key-switching table and the entries selected by a_i = 0.7.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/kstable.tex}
+\caption{Key switching for one coefficient $a_i$ of the extracted ciphertext.
+For each of the $t=8$ digit positions $j$, the table has an LWE encryption
+under $s$ of $v\cdot s'_i/4^j$ for every possible digit $v$. The base-4 digits of
+$a_i$ choose one entry per position; the chosen entries are subtracted from
+$(\mathbf 0,b)$, and zero digits are skipped. Doing this for all $N=1024$
+coefficients replaces the part $\sum_ia_is'_i$ of the phase by the same value
+computed under the key $s$.}
+\label{fig:kstable}
+\end{figure}

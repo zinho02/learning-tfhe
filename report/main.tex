@@ -1,0 +1,1688 @@
+%% Final report of the MO422 project: a from-scratch C++ implementation of TFHE.
+%%
+%% Template: SBC (sbc-template.sty, sbc.bst and caption2.sty, distributed by the
+%% Brazilian Computer Society and included in this folder without changes).
+%%
+%% Build:  make        (pdflatex; bibtex; pdflatex x2)
+%% Data:   data/results.tex and data/*.dat are produced by experiments/summarize.py
+%%         from the raw measurements in data/raw/ (see experiments/run_all.sh).
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian,english]{babel}
+\usepackage{graphicx,url}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{pifont}
+\usepackage[hidelinks]{hyperref}
+\usetikzlibrary{positioning,decorations.pathreplacing,calc,arrows.meta}
+\usepgfplotslibrary{groupplots}
+% Overlay specifications in the shared TikZ figures only matter in the slides.
+\tikzset{visible on/.style={}}
+\pgfplotsset{compat=1.18}
+
+\definecolor{cBlue}{HTML}{2C5F8A}
+\definecolor{cOrange}{HTML}{C9762B}
+\definecolor{cGreen}{HTML}{3B8B5C}
+\definecolor{cRed}{HTML}{B03A3A}
+\definecolor{cGray}{HTML}{6E6E6E}
+\definecolor{cNavy}{HTML}{1E2B3C}
+
+\lstset{basicstyle=\ttfamily\fontsize{9}{11}\selectfont, columns=fullflexible, keepspaces=true,
+        language=C++, keywordstyle=\color{cBlue}\bfseries,
+        commentstyle=\color{cGray}\itshape, frame=lines, framesep=4pt,
+        rulecolor=\color{cGray!60}, xleftmargin=0.3cm, xrightmargin=0.3cm,
+        aboveskip=8pt, belowskip=4pt, numbers=none}
+
+\theoremstyle{plain}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+
+\sloppy
+\raggedbottom   % keep paragraph spacing uniform when a figure floats to the next page
+\setlength{\belowcaptionskip}{4pt}
+
+\input{data/results.tex}
+
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\TN}{\T_N[X]}
+\newcommand{\ZN}{\Z_N[X]}
+\newcommand{\BN}{\B_N[X]}
+\newcommand{\round}[1]{\left\lfloor #1 \right\rceil}
+\newcommand{\Bg}{B_g}
+\newcommand{\Bks}{B_{\mathrm{ks}}}
+\newcommand{\BK}{\mathrm{BK}}
+\newcommand{\KSK}{\mathrm{KSK}}
+\newcommand{\ext}{\boxdot}
+\newcommand{\Dec}{\mathrm{Dec}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{TFHE from Scratch: A C++ Implementation of\\Gate Bootstrapping over the Torus}
+
+\author{Matheus de Oliveira Saldanha}
+
+\address{Instituto de Computação -- Universidade Estadual de Campinas (Unicamp)\\
+  Campinas -- SP -- Brazil
+  \email{matheus@saldanhash.xyz}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Fully homomorphic encryption (FHE) lets a server compute on data that it
+cannot read. TFHE does this one Boolean gate at a time: after every gate, a
+procedure called bootstrapping cleans the noise of the result, so circuits of
+any depth can be evaluated. In this project we implemented TFHE gate
+bootstrapping from scratch in C++, using the same 128-bit parameters as the
+original TFHE library. This report explains the scheme step by step, from LWE
+encryption to a working encrypted adder, describes the main implementation
+choices (the negacyclic FFT and a trick that computes signed digits with a
+single addition), and compares our code with the original library. A NAND gate
+takes \OurNandMean\,ms in our implementation, which is $\SlowdownSpq\times$
+slower than the original library with its assembly FFT and $\SpeedupNay\times$
+faster than its portable version. We saw no decryption errors in \TotalGates{}
+gates, and the measured noise matches an average-case analysis.
+\end{abstract}
+
+\begin{resumo}
+\selectlanguage{brazilian}%
+A criptografia totalmente homomórfica (FHE) permite que um servidor faça
+cálculos sobre dados que ele não consegue ler. O TFHE faz isso uma porta lógica
+de cada vez: depois de cada porta, um procedimento chamado \emph{bootstrapping}
+limpa o ruído do resultado, e assim circuitos de qualquer profundidade podem
+ser avaliados. Neste projeto implementamos o \emph{gate bootstrapping} do TFHE
+do zero em C++, com os mesmos parâmetros de 128 bits da biblioteca original.
+Este relatório explica o esquema passo a passo, da cifra LWE até um somador
+cifrado funcionando, descreve as principais escolhas de implementação (a FFT
+negacíclica e um truque que calcula dígitos com sinal com uma única soma) e
+compara o nosso código com a biblioteca original. Uma porta NAND leva
+\OurNandMean\,ms na nossa implementação, $\SlowdownSpq$ vezes mais que a
+biblioteca original com a FFT em assembly e $\SpeedupNay$ vezes menos que a sua
+versão portável. Não observamos nenhum erro de decifração em \TotalGates{}
+portas, e o ruído medido concorda com uma análise de caso médio.
+\selectlanguage{english}%
+\end{resumo}
+
+%% ===========================================================================
+\section{Introduction}
+\label{sec:intro}
+
+The idea of computing on encrypted data was proposed by
+\cite{rivest1978databanks}, but the first scheme that supports any computation
+only came thirty years later, with the work of \cite{gentry2009fhe}. Today,
+practical fully homomorphic encryption (FHE) schemes are based on lattice
+problems, mainly Learning With Errors (LWE) \cite{regev2005lwe} and its
+version with polynomials \cite{lyubashevsky2010ringlwe}. In these schemes every
+ciphertext contains a small random error, called noise, which is needed for
+security. Each operation on ciphertexts makes the noise larger, and when it
+gets too large the message can no longer be decrypted. Gentry's solution was
+\emph{bootstrapping}: an operation that takes a noisy ciphertext and produces a
+new ciphertext of the same message with small noise.
+
+The first bootstrapping procedures took minutes. Building on the GSW scheme
+\cite{gentry2013gsw}, the FHEW scheme \cite{ducas2015fhew} reduced this to
+less than a second by bootstrapping after every Boolean gate. TFHE, proposed by
+\cite{chillotti2016faster} and described in full by \cite{chillotti2020tfhe},
+improved this approach: it works over the real torus $\T=\R/\Z$ and introduces an \emph{external product}
+between two kinds of ciphertexts. With it, a bootstrapped gate takes tens of
+milliseconds on one processor core, and the public key that the server needs
+shrinks from gigabytes to tens of megabytes. Because every gate gives back a
+ciphertext with fresh, small noise, any circuit can be evaluated, no matter how
+deep.
+
+The goal of this project was to study TFHE, implement it from scratch in C++,
+and compare our implementation with the original library \cite{tfhelib} in
+four aspects: correctness, performance, memory and noise. Our
+implementation\footnote{The source code, the tests and the scripts that produce
+every number in this report are in the project repository
+(\texttt{learning-tfhe}).} has no external dependencies and uses exactly the
+same parameters as the original library. In this report we:
+\begin{itemize}
+  \item explain the scheme step by step, showing for each part which problem
+        it solves, with small examples (Sections~\ref{sec:background}
+        and~\ref{sec:bootstrapping});
+  \item describe the implementation choices that matter most for correctness
+        and speed (Section~\ref{sec:impl});
+  \item compare our implementation with the original library and check that
+        the measured noise agrees with the theory (Section~\ref{sec:eval}).
+\end{itemize}
+Section~\ref{sec:conclusion} concludes.
+
+\paragraph{How the scheme is presented.}
+TFHE uses several kinds of ciphertexts and operations, and each one exists to
+solve a problem created by the others. Instead of defining all of them at the
+start, Sections~\ref{sec:background} and~\ref{sec:bootstrapping} introduce them
+in the order in which the problems appear (Figure~\ref{fig:roadmap}): first an
+encryption scheme with noise (LWE), then its two limitations, then the plan
+TFHE uses to fix both (looking up a value in a table by rotating it), then the
+two tools that this plan needs (TRLWE and the external product), and finally
+the five steps of a bootstrapped gate. Readers interested only in the
+implementation and in the results can go directly to Section~\ref{sec:impl}.
+
+\input{figures/fig_roadmap.tex}
+
+%% ===========================================================================
+\section{Background: From Noisy Encryption to an Encrypted Table Lookup}
+\label{sec:background}
+
+This section builds, one step at a time, the tools that TFHE combines into a
+bootstrapped gate. Each subsection answers a question left open by the one
+before it. We follow the presentation of \cite{chillotti2020tfhe}, in the
+setting used by the original library; the guide by \cite{joye2022guide}
+explains the same material in more detail. We write $\B=\{0,1\}$, $\round{x}$
+for the integer closest to $x$, and $\vartheta=\sigma^2$ for the variance of a
+random variable.
+
+\subsection{The Torus}
+\label{sec:torus}
+
+All ciphertexts in this report work the same way: whoever has the key can
+compute the message plus a small error, and then removes the error by
+rounding. For this we need a set where messages can be added, where a small
+error can be removed by rounding to the nearest message, and where additions
+never overflow. The real torus $\T=\R/\Z$, the real numbers modulo $1$, has all
+three properties. It is easiest to think of it as a circle of length one
+(Figure~\ref{fig:torus}): adding a number moves us along the circle, and after
+a full turn we are back at the same point, so $0.25$, $1.25$ and $-0.75$ are the
+same element of $\T$.
+
+\paragraph{Messages and rounding.}
+A message $m\in\Z_M$ is placed at the point $m/M$, so the $M$ possible messages
+are evenly spread around the circle. To decode a noisy point, we round it to
+the closest of these $M$ points. This gives the right answer whenever the error
+is smaller than half the distance between two messages, that is, smaller than
+$1/(2M)$. For example, with $M=8$ every point closer than $1/16$ to $1/8$ is
+decoded as $1/8$ (Figure~\ref{fig:torus}a). The logic gates of
+Section~\ref{sec:gates} use an even simpler encoding: \textsf{true} is
+$+\frac18$, \textsf{false} is $-\frac18$, and to decode we only check in which
+half of the circle the point is, which allows errors up to $\frac18$
+(Figure~\ref{fig:torus}b).
+
+\input{figures/fig_torus.tex}
+
+\paragraph{Integers times torus elements, but not torus times torus.}
+We can multiply a point $t$ of the torus by an integer $k$: $k\cdot t$ is just
+$t$ added $k$ times. But we cannot multiply two points of the torus, because the
+result would depend on which real number we use to represent each point. For
+example, $\frac12$ and $\frac32$ are the same point, but
+$\frac12\cdot\frac12=\frac14$ while $\frac32\cdot\frac12=\frac34$. This limitation
+has a big influence on the whole scheme: TFHE never multiplies two ciphertexts,
+and Section~\ref{sec:extprod} explains how it still manages to multiply a
+ciphertext by an encrypted bit.
+
+\subsection{LWE Encryption}
+\label{sec:lwe}
+
+\paragraph{A first attempt.}
+Let the secret key be a list of $n$ random bits, $s\in\B^n$. To hide a point
+$\mu\in\T$, we choose a random public vector $\mathbf a\in\T^n$ and publish the
+pair $(\mathbf a,b)$ with $b=\langle\mathbf a,s\rangle+\mu$. Only the owner of
+$s$ can compute the \emph{mask} $\langle\mathbf a,s\rangle=\sum_ia_is_i$ and
+subtract it from $b$ to recover $\mu$. This scheme, however, is easy to break.
+Every ciphertext of a known message (for example, of $0$) gives the attacker a
+linear equation in the $n$ unknown bits of $s$, and with $n$ such equations the
+attacker finds $s$ by Gaussian elimination.
+
+\paragraph{Adding noise.}
+\cite{regev2005lwe} fixed this by making every equation slightly wrong.
+
+\begin{definition}[LWE ciphertext]
+Let $s\in\B^n$ and $\sigma>0$. An LWE encryption of $\mu\in\T$ is the pair
+$c=(\mathbf{a},b)\in\T^{n+1}$, where $\mathbf{a}$ is uniform in $\T^n$, $e$ is a
+random error drawn from a Gaussian with mean $0$ and standard deviation
+$\sigma$, and $b=\langle\mathbf{a},s\rangle+\mu+e$. The \emph{phase} of $c$ is
+$\varphi_s(c)=b-\langle\mathbf{a},s\rangle=\mu+e$.
+\end{definition}
+
+Because of the error $e$, the equations are only approximately true. Finding
+$s$ from them, or even telling them apart from random numbers, is the Learning
+With Errors problem, which is believed to be hard even for quantum computers.
+So the noise is not a flaw of the scheme: it is what makes it secure. The cost
+is that, after removing the mask, we get the phase $\mu+e$ instead of $\mu$.
+This is why messages are spread out on the circle and decoded by rounding
+(Section~\ref{sec:torus}). The phase is the most important idea in this report:
+to know what a ciphertext contains, we compute its phase. For a new ciphertext
+with our parameters, $\sigma=2^{-15}\approx3\cdot10^{-5}$, which is more than two
+thousand times smaller than the tolerance $\frac1{16}$ of $\Z_8$.
+
+\begin{example}[A small LWE ciphertext]
+To keep the numbers small, we use a torus with only 256 points (the integer
+$t$ stands for $t/256$), $n=4$, and messages in $\Z_4$, so that the message $1$
+is the point $1/4$, i.e., the integer $64$. Take $s=(1,0,1,1)$,
+$\mathbf{a}=(100,37,201,54)$ and $e=3$. Then
+$\langle\mathbf{a},s\rangle=100+201+54=355$ and $b=355+64+3\equiv166$
+(mod $256$). To decrypt, we compute the phase $166-355\equiv67$ and round it to
+the closest multiple of $64$, which is $64$: the message is $1$ and the error
+was $3$.
+\end{example}
+
+\subsection{What LWE Can and Cannot Do}
+\label{sec:limits}
+
+\paragraph{Linear operations are free.}
+The phase is a linear function of the ciphertext: for integers $k_j$,
+$\varphi_s(\sum_jk_jc_j)=\sum_jk_j\varphi_s(c_j)$. So if we add two ciphertexts
+component by component, we get a ciphertext of the sum of their messages. For
+example, if $c_1$ encrypts $\frac38$ and $c_2$ encrypts $\frac68$, then $c_1+c_2$
+decrypts to $\frac98\equiv\frac18$, which is addition modulo $8$. Multiplying a
+ciphertext by a public integer works the same way. To add a public constant
+$\mu$, we use the \emph{trivial} ciphertext $(\mathbf0,\mu)$, whose phase is
+$\mu$ for any key. In short, anyone can compute linear functions of encrypted
+messages without knowing the key.
+
+\paragraph{Two problems.}
+Linear functions are not enough, and they also have a cost.
+\begin{enumerate}
+  \item \emph{No nonlinear operation.} To compute any function we need at least
+        one nonlinear operation, such as the AND of two bits. LWE ciphertexts
+        cannot be multiplied, since their components are points of the torus.
+  \item \emph{The noise keeps growing.} When we add two independent
+        ciphertexts, the variances of their errors add up, and multiplying by
+        $k$ multiplies the standard deviation by $|k|$. After enough
+        operations, the error becomes larger than the tolerance and decryption
+        fails.
+\end{enumerate}
+
+\paragraph{Bootstrapping.}
+\cite{gentry2009fhe} showed how to solve the second problem with
+\emph{bootstrapping}: running the decryption itself on encrypted data, which
+replaces a noisy ciphertext with a fresh ciphertext of the same message. TFHE
+uses a version of bootstrapping that solves both problems at once. It takes an
+LWE ciphertext with phase $\varphi$, which may be quite noisy, and returns a new
+LWE ciphertext of $f(\varphi)$, where $f$ is a function chosen in advance. The
+error of the result is small and does \emph{not} depend on the error of the
+input. For logic gates, $f$ tells in which half of the circle the phase is.
+This function is not linear, which solves the first problem, and its output
+has fresh noise, which solves the second.
+
+\subsection{The Idea of TFHE's Bootstrapping: a Table Lookup}
+\label{sec:plan}
+
+How can a server compute $f(\varphi)$ if it only has ciphertexts and public keys
+and never learns $\varphi$? TFHE uses a table lookup, done by rotating a table,
+in three steps (Figure~\ref{fig:plan}):
+\begin{enumerate}
+  \item round the phase to one of a finite number of positions, $\bar\varphi$;
+  \item put in entry $j$ of a table the answer for phases at position $j$,
+        that is, $f(j/(2N))$, and \emph{rotate} the table by $\bar\varphi$
+        positions, so that the answer for $\bar\varphi$ ends up at position $0$;
+  \item read position $0$.
+\end{enumerate}
+The hard part is step 2: the server must rotate the table by an amount that it
+does not know, because $\bar\varphi$ depends on the secret key. To do this, we
+need two tools, which are described in the next two subsections:
+\begin{itemize}
+  \item[(a)] an encryption of a whole table that can be rotated cheaply and
+        without increasing its noise: polynomials and TRLWE
+        (Section~\ref{sec:trlwe});
+  \item[(b)] a way to make each rotation depend on a secret bit, that is, to
+        compute ``if the encrypted bit is $1$ then rotate, otherwise do not'':
+        the external product and the CMux (Section~\ref{sec:extprod}).
+\end{itemize}
+
+\input{figures/fig_plan.tex}
+
+\subsection{Polynomials and TRLWE}
+\label{sec:trlwe}
+
+\paragraph{Tables as polynomials.}
+A table of $N$ points of the torus can be written as a polynomial
+$v=v_0+v_1X+\dots+v_{N-1}X^{N-1}$, with one coefficient per entry. Then rotating
+the table should be the same as multiplying by a power of $X$. To keep the
+degree below $N$, we compute modulo $X^N+1$: we work with $\ZN=\Z[X]/(X^N+1)$
+(integer coefficients) and $\TN$ (torus coefficients), where $N$ is a power of
+two. The rule $X^N=-1$ turns multiplication by $X$ into a rotation: every
+coefficient moves up one position, and the coefficient at the top comes back
+at the bottom with its sign changed. No arithmetic is needed, only moving
+coefficients and changing signs.
+
+\begin{example}[Rotation with $N=4$]
+$(1+2X+3X^3)\cdot X^2=X^2+2X^3+3X^5=-3X+X^2+2X^3$, because
+$X^5=X^4\cdot X=-X$. With coefficient vectors, $[1,2,0,3]$ becomes
+$[0,-3,1,2]$: every coefficient moves up two positions, and the one that falls
+off the end comes back at the start with its sign changed.
+\end{example}
+
+Because of the sign change, rotating $N$ times changes the sign of the whole
+table ($X^N=-1$), and only after $2N$ rotations do we get back to the start
+($X^{2N}=1$). So the exponents of $X$ work modulo $2N$, and a table of $N$
+entries has $2N$ rotation positions: in the first $N$ positions we read the
+entries $v_j$, and in the next $N$ we read $-v_j$. Section~\ref{sec:testpoly}
+shows that this sign change gives us exactly the sign function that the gates
+need. Products in $\ZN\times\TN$ are called \emph{negacyclic};
+Section~\ref{sec:fft} explains how we compute them quickly.
+
+\paragraph{TRLWE: LWE with polynomials.}
+If we replace every number in the definition of LWE by a polynomial, we get an
+encryption of a whole table at once.
+
+\begin{definition}[TRLWE ciphertext]
+Let $s'\in\BN$ be a polynomial with coefficients in $\{0,1\}$. A TRLWE
+encryption of $\mu\in\TN$ is a pair $c=(a,b)\in\TN^2$, where $a$ is uniform,
+$e\in\TN$ has independent Gaussian coefficients, and $b=a\cdot s'+\mu+e$. Its
+phase is the polynomial $\varphi_{s'}(c)=b-a\cdot s'=\mu+e$.
+\end{definition}
+
+Each coefficient of the phase is the matching coefficient of the message plus a
+small error. The phase is still linear, so TRLWE ciphertexts can be added just
+like LWE ciphertexts. What the plan needs is that they can also be rotated: if
+we multiply both components by $X^e$, we get a ciphertext with phase
+$\varphi_{s'}(X^ea,X^eb)=X^eb-X^ea\,s'=X^e\varphi_{s'}(c)$. Since $X^e$ only moves
+coefficients and changes signs, the error is rotated together with the message
+but it does not grow. So rotating an encrypted table by a \emph{known} amount
+is free. What is left is to rotate it by a secret amount.
+
+\subsection{Multiplying by an Encrypted Bit}
+\label{sec:extprod}
+
+\paragraph{The problem.}
+The rotation in the plan depends on the phase $\varphi=b-\sum_ia_is_i$, and
+therefore on the secret bits $s_i$. Section~\ref{sec:blindrot} will show that
+we can do it one bit at a time, with steps of the form
+\[
+  \mathrm{ACC}\gets\begin{cases}X^{k_i}\cdot\mathrm{ACC} & \text{if } s_i=1,\\
+                                \mathrm{ACC} & \text{if } s_i=0,\end{cases}
+\]
+which is the same as
+\[
+  \mathrm{ACC}\gets\mathrm{ACC}+s_i\cdot\big(X^{k_i}-1\big)\cdot\mathrm{ACC},
+\]
+where $\mathrm{ACC}$ is a TRLWE ciphertext, $k_i$ is public, and the server only
+has $s_i$ in encrypted form. So we need to multiply a TRLWE ciphertext by an
+encrypted bit, and there are two obstacles. First, the bit cannot be encrypted
+with LWE or TRLWE, because then we would have to multiply points of the torus
+by points of the torus. Second, even multiplying a ciphertext by a public
+integer is risky, because the error is multiplied too: the coefficients of a
+ciphertext are arbitrary points of the circle, and written as integers they are
+very large numbers. TFHE solves both problems in three steps.
+
+\paragraph{Step 1: small digits.}
+The second problem goes away if we never multiply by large numbers, only by
+small ones. For this, we write each point of the torus in a base $\Bg$, using a
+few digits of small size.
+
+\begin{definition}[Gadget decomposition]
+Let $\Bg=2^{\beta_{\mathrm{bit}}}$ and $\ell\ge1$. The decomposition of
+$t\in\T$ is a vector $\Dec(t)=(d_1,\dots,d_\ell)\in\Z^\ell$ of signed digits
+$d_i\in[-\Bg/2,\Bg/2)$ such that
+\begin{equation}
+  \Big|\,t-\sum_{i=1}^{\ell}\frac{d_i}{\Bg^{\,i}}\Big|\le\varepsilon
+  :=\frac{1}{2\Bg^{\ell}}.
+  \label{eq:gadget}
+\end{equation}
+For a polynomial in $\TN$, we decompose each coefficient, and we get $\ell$
+polynomials in $\ZN$ whose coefficients are at most $\beta=\Bg/2$ in absolute
+value.
+\end{definition}
+
+The vector $(\Bg^{-1},\dots,\Bg^{-\ell})$ that the digits multiply is called the
+\emph{gadget}. With our parameters, $\Bg=2^7$ and $\ell=3$, so each coefficient
+becomes three digits between $-64$ and $63$, with a rounding error of at most
+$2^{-22}$.
+
+\begin{example}[Signed digits in base 10]
+\label{ex:decimal}
+The idea is easier to see in base $10$ with $\ell=2$. Then the digits must be in
+$[-5,5)$ and $\varepsilon=0.005$. For $t=0.7316$, the usual digits are $7$ and
+$3$, but $7$ is too large. Since $0.73=1-0.27$, on the torus $0.73$ is the same
+point as $-0.27$, so the signed digits are $d_1=-3$ and $d_2=3$. Indeed,
+$-\frac3{10}+\frac3{100}=-0.27\equiv0.73$, which is at distance
+$0.0016\le\varepsilon$ from $t$. Section~\ref{sec:offset} shows how to compute
+such digits quickly.
+\end{example}
+
+\paragraph{Step 2: the encryptions that the server needs (TRGSW).}
+Let $d=(a,b)$ be a TRLWE ciphertext and $m$ a secret integer (in our case, a
+key bit). We want a ciphertext whose phase is
+$m\cdot\varphi(d)=m\cdot b-m\,s'\cdot a$. If we decompose the two components
+into digit polynomials, $a\approx\sum_iu_i\Bg^{-i}$ and $b\approx\sum_iw_i\Bg^{-i}$,
+we get
+\begin{equation}
+  m\cdot\varphi(d)\;\approx\;\sum_{i=1}^{\ell}w_i\cdot\Big(\frac{m}{\Bg^{\,i}}\Big)
+                  +\sum_{i=1}^{\ell}u_i\cdot\Big(\frac{-m\,s'}{\Bg^{\,i}}\Big).
+  \label{eq:wish}
+\end{equation}
+The digits $u_i$ and $w_i$ are small and public, because the server can compute
+them from $d$. The terms in parentheses depend on the secret, so they must be
+given to the server in encrypted form. A TRGSW ciphertext of $m$ is exactly the
+list of these $2\ell$ encryptions.
+
+\begin{definition}[TRGSW ciphertext]
+A TRGSW encryption of $m\in\Z$ under $s'$ is a list of $2\ell$ TRLWE encryptions
+of zero, $Z_1,\dots,Z_{2\ell}$, to which we add $m$ times the gadget:
+$C_i=Z_i+(m/\Bg^{\,i},0)$ and $C_{\ell+i}=Z_{\ell+i}+(0,m/\Bg^{\,i})$ for
+$i=1,\dots,\ell$.
+\end{definition}
+
+If we compute the phases of the rows, we see that they hold what
+Eq.~\eqref{eq:wish} needs: $\varphi(C_i)=e_i-m s'/\Bg^{\,i}$ (the term added to
+the first component gets multiplied by $s'$ when we compute the phase) and
+$\varphi(C_{\ell+i})=e_{\ell+i}+m/\Bg^{\,i}$ (Figure~\ref{fig:trgsw}). Since each
+row is an encryption, the TRGSW ciphertext does not reveal $m$.
+
+\input{figures/fig_trgsw.tex}
+
+\paragraph{Step 3: the external product.}
+Now we just combine the rows using the digits as weights, which computes
+Eq.~\eqref{eq:wish} on ciphertexts. The \emph{external product} of $C$ with
+$d=(a,b)$ is
+\begin{equation}
+  C\ext d=\sum_{i=1}^{\ell}u_i\cdot C_i+\sum_{i=1}^{\ell}w_i\cdot C_{\ell+i},
+  \qquad (u_i)=\Dec(a),\ (w_i)=\Dec(b),
+  \label{eq:extprod}
+\end{equation}
+and, since the phase is linear,
+\begin{align*}
+\varphi(C\ext d)
+  &=m\Big(\sum_i\frac{w_i}{\Bg^{\,i}}-s'\sum_i\frac{u_i}{\Bg^{\,i}}\Big)
+    +\sum_i\big(u_ie_i+w_ie_{\ell+i}\big)\\
+  &=m\,\varphi(d)+m\,(\epsilon_b-s'\epsilon_a)
+    +\sum_i\big(u_ie_i+w_ie_{\ell+i}\big),
+\end{align*}
+where $\epsilon_a$ and $\epsilon_b$ are the decomposition errors, whose
+coefficients are at most $\varepsilon$. Both problems are solved: we never
+multiply two points of the torus (the digits are integers), and the errors
+$e_r$ of the rows are only multiplied by digits of size at most $\beta=64$.
+
+\begin{proposition}[Noise of the external product {\cite{chillotti2020tfhe}}]
+\label{prop:extprod}
+Let $C$ encrypt $m\in\{0,1\}$ with noise variance $\vartheta_C$, and let the error
+of $d$ have variance $\vartheta_d$. Then the error of $C\ext d$ has variance at
+most $2\ell N\beta^2\vartheta_C+m\big((1+N)\varepsilon^2+\vartheta_d\big)$.
+\end{proposition}
+
+The three terms come from the last equation. The first one comes from the
+$2\ell$ products of a digit polynomial by an error polynomial: each coefficient
+of such a product is a sum of $N$ terms, each a digit (at most $\beta$) times an
+error. The second comes from the decomposition errors, and the third is the
+error that $d$ already had. The first term explains how the parameters are
+chosen. A larger base $\Bg$ needs fewer digits $\ell$, so there are fewer
+products and the external product is faster, but $\beta$ grows and so does the
+noise. It also explains why TRGSW ciphertexts need a very small error: with our
+parameters $2\ell N\beta^2\approx2.5\cdot10^7$, so they are created with standard
+deviation $2^{-25}$ instead of the $2^{-15}$ used for LWE
+(Table~\ref{tab:params}). Finally, the error of $d$ is carried over but not
+multiplied, so the noise grows by \emph{adding} a small amount each time. This
+is what allows hundreds of external products in a row.
+
+\paragraph{The encrypted if-then-else (CMux).}
+With multiplication by an encrypted bit, we can now choose between two
+ciphertexts without knowing the choice. Given TRLWE ciphertexts $d_0$ and $d_1$
+and a TRGSW ciphertext $C$ of a bit $m$,
+\begin{equation}
+  \mathrm{CMux}(C,d_1,d_0)=d_0+C\ext(d_1-d_0)
+  \label{eq:cmux}
+\end{equation}
+encrypts $\mu_0+m(\mu_1-\mu_0)$, that is, the message of $d_1$ if $m=1$ and the
+message of $d_0$ if $m=0$, and the server does not learn which one
+(Figure~\ref{fig:cmux}a). It costs one external product in both cases. If we
+take $d_1=X^{k_i}\cdot\mathrm{ACC}$, $d_0=\mathrm{ACC}$ and $C$ a TRGSW
+ciphertext of $s_i$, this is exactly the step that we needed at the start of
+this subsection.
+
+\begin{example}[CMux]
+\label{ex:cmux}
+Let $d_0$ and $d_1$ encrypt the constant polynomials $\mu_0=\frac18$ and
+$\mu_1=\frac58$. The difference $d_1-d_0$ encrypts $\frac12$, so $C\ext(d_1-d_0)$
+encrypts $0$ if $m=0$ and $\frac12$ if $m=1$. Adding $d_0$ gives a phase of
+$\frac18$ or $\frac18+\frac12=\frac58$, which is the message of $d_0$ or of $d_1$
+(Figure~\ref{fig:cmux}b).
+\end{example}
+
+\input{figures/fig_cmux.tex}
+
+%% ===========================================================================
+\section{How a Gate Is Bootstrapped}
+\label{sec:bootstrapping}
+
+\subsection{Overview}
+
+We now have everything we need to carry out the plan of
+Section~\ref{sec:plan} on real ciphertexts. Figure~\ref{fig:pipeline} shows the
+path of one gate. Each stage has a clear purpose:
+\begin{itemize}
+  \item the \emph{linear combination} of the two inputs gives a ciphertext whose
+        phase is in the upper half of the circle exactly when the output of the
+        gate should be \textsf{true} (Section~\ref{sec:gates});
+  \item \emph{modulus switching} turns its phase, a point of the torus, into one
+        of $2N$ rotation positions (Section~\ref{sec:modswitch});
+  \item \emph{blind rotation} rotates the \emph{test polynomial}, which is the
+        table of answers (Section~\ref{sec:testpoly}), by that position, using
+        one CMux per bit of the secret key (Section~\ref{sec:blindrot});
+  \item \emph{sample extraction} reads position $0$ of the rotated table as an
+        LWE ciphertext (Section~\ref{sec:extract});
+  \item \emph{key switching} brings this ciphertext back to the key and size of
+        the inputs, so that it can be used by the next gate
+        (Section~\ref{sec:ks}).
+\end{itemize}
+
+\paragraph{Who has which key.}
+The client has two secret keys: $s\in\B^n$, used to encrypt and decrypt the
+user's bits as LWE ciphertexts, and $s'\in\BN$, used for the TRLWE ciphertexts
+inside the bootstrapping. The server must run CMux operations controlled by
+the bits of $s$, so it receives each of these bits encrypted as a TRGSW
+ciphertext under $s'$. This is the \emph{bootstrapping key},
+$\BK_i=\mathrm{TRGSW}_{s'}(s_i)$ for $i=1,\dots,n$. The server also receives the
+\emph{key-switching key}, described in Section~\ref{sec:ks}. Together, they form
+the public \emph{evaluation key}. Publishing it is considered safe under the
+usual assumption, called circular security, that each key can be encrypted
+under the other one.
+
+\input{figures/fig_pipeline.tex}
+
+\subsection{Step 1: Modulus Switching}
+\label{sec:modswitch}
+
+We can only rotate by whole numbers of positions, modulo $2N$
+(Section~\ref{sec:trlwe}), but the phase $\varphi=b-\sum_ia_is_i$ of the input
+$c=(\mathbf a,b)$ is a point of the torus. So the first step cuts the circle
+into $2N$ slices and asks in which slice the phase is. The server cannot
+compute $\varphi$, so instead it rounds every public component of $c$:
+\[
+  \bar b=\round{2Nb},\qquad \bar a_i=\round{2Na_i},\qquad
+  \bar\varphi=\bar b-\sum_i\bar a_is_i\bmod 2N\approx2N\varphi.
+\]
+The integer $\bar\varphi$ is the number of the slice
+(Figure~\ref{fig:testpoly}a shows the slices for $N=4$). It is still secret,
+because it depends on $s$, but now it is a valid rotation amount. Rounding adds
+a small error: each rounded value is off by at most $1/(4N)$, with variance
+$1/(48N^2)$, and only $\bar b$ and the $\bar a_i$ with $s_i=1$ (about half of
+them) matter. This \emph{modulus-switching error} has variance
+$\vartheta_{\mathrm{ms}}\approx(1+n/2)/(48N^2)\approx6.3\cdot10^{-6}$, a standard
+deviation of $0.0025$. It adds to the error of the input and can at most make
+the lookup use a neighboring slice; it never reaches the output.
+
+\subsection{Step 2: The Test Polynomial}
+\label{sec:testpoly}
+
+After modulus switching, the input has been reduced to a slice number
+$\bar\varphi$ between $0$ and $2N-1$. The bootstrapping must now return a value
+that depends on this slice, and the \emph{test polynomial} is the table that
+says which value.
+
+\paragraph{What the coefficients $v_j$ are.}
+The test polynomial $v=v_0+v_1X+\dots+v_{N-1}X^{N-1}$ has torus coefficients
+chosen by the server. Each coefficient is one entry of the table:
+\begin{quote}
+  $v_j$ is the value that the bootstrapping returns when the rounded phase of
+  its input is $\bar\varphi=j$, that is, when the phase is close to $j/(2N)$.
+\end{quote}
+The $N$ coefficients cover the $N$ slices of the upper half of the circle. The
+slices of the lower half do not have their own coefficients: slice $N+j$, which
+is opposite slice $j$, returns $-v_j$. Figure~\ref{fig:testwheel} shows this for
+$N=4$, with each of the $8$ slices labeled with its output.
+
+So, choosing $v$ means choosing what the bootstrapping computes: to evaluate a
+function $f$ of the phase, we set $v_j=f\big(j/(2N)\big)$ for $j=0,\dots,N-1$.
+Figure~\ref{fig:testwheel} shows two examples.
+\begin{itemize}
+  \item \emph{Gates} (b): $v_j=\mu=\frac18$ for every $j$. Every slice of the
+        upper half returns $+\frac18$ and every slice of the lower half
+        returns $-\frac18$. The bootstrapping computes the sign of the phase,
+        already in the encoding of bits (\textsf{true} is $+\frac18$,
+        \textsf{false} is $-\frac18$). The sign change caused by $X^N=-1$ gives
+        us the second half of the sign function for free.
+  \item \emph{A table that is not constant} (c): with $N=4$ and $v_j=j/8$, slice
+        $j$ of the upper half returns $j/8$. An input whose phase is close to
+        $\frac28$ comes out as an encryption of $\frac28$, with fresh noise.
+\end{itemize}
+Since the lower half always returns the negated entries, the function must
+satisfy $f(\varphi+\frac12)=-f(\varphi)$. The sign function does. Other
+functions can still be computed if we make sure that the inputs are always in
+the upper half of the circle, as in the example at the end of this subsection.
+
+\input{figures/fig_testwheel.tex}
+
+\paragraph{Why rotating reads the right entry.}
+Now we can see why multiplying by $X^{-\bar\varphi}$ looks up entry
+$\bar\varphi$. Multiplying by $X^{-1}$ moves every coefficient one position
+toward the constant term: the coefficient of $X$ becomes the constant
+coefficient, and the old constant coefficient, which falls off the end, comes
+back as the coefficient of $X^{N-1}$ with its sign changed. After $\bar\varphi$
+such moves, the constant coefficient is $v_{\bar\varphi}$ if $\bar\varphi<N$, and
+$-v_{\bar\varphi-N}$ otherwise, which is exactly the label of slice $\bar\varphi$
+in Figure~\ref{fig:testwheel}. Figure~\ref{fig:testpoly}b lists all $2N$
+rotations for $N=4$. Reading its first column from top to bottom gives
+$v_0,\dots,v_3,-v_0,\dots,-v_3$, the labels of the slices in order around the
+circle.
+
+\input{figures/fig_testpoly.tex}
+
+\paragraph{Is the test polynomial encrypted?}
+No. The function being computed is not a secret (the server knows that it is
+computing a NAND, for example), so the table is public. What must stay hidden
+is the input, and therefore \emph{which} entry of the table is selected. The
+test polynomial enters the blind rotation as the \emph{trivial} TRLWE
+ciphertext $(0,X^{-\bar b}\cdot v)$. Its mask is zero, so its phase is
+$X^{-\bar b}v$ under any key, without any noise. This ciphertext hides nothing,
+but it does not need to, since $\bar b$ comes from the public part of the
+input. The accumulator becomes a real ciphertext at the first CMux, which adds
+$\BK_i\ext\big((X^{\bar a_i}-1)\cdot\mathrm{ACC}\big)$. This term is a new
+encryption, under the real key $s'$, of either the rotation difference (if
+$s_i=1$) or zero (if $s_i=0$). From then on the accumulator has a random mask and
+some noise, and the two possible results look the same to anyone without the
+key (Figure~\ref{fig:trivial}). In other words, the table is public, but the
+choice of the entry is secret.
+
+\input{figures/fig_trivial.tex}
+
+\paragraph{Programmable bootstrapping.}
+Using the bootstrapping to compute functions other than the sign was later
+called \emph{programmable bootstrapping} \cite{chillotti2021pbs}. For example,
+with $N=1024$ we can split the coefficients into four bands of $N/4=256$
+consecutive coefficients and store $m/8$ in every coefficient of band $m$, that
+is, $v_j=\lfloor4j/N\rfloor/8$. An input encrypting $(2m+1)/16$ has a rounded
+phase close to $2N\cdot(2m+1)/16=128\,(2m+1)$, which is the middle of band $m$,
+so it comes out as an encryption of $m/8$. In this way one bootstrapping
+computes a lookup table with four entries instead of a sign. All these inputs
+are in the upper half of the circle, so the negated entries of the lower half
+are never used.
+
+\subsection{Step 3: Blind Rotation}
+\label{sec:blindrot}
+
+We still need to compute an encryption of $X^{-\bar\varphi}\cdot v$ without
+knowing $\bar\varphi$. The main observation is that the rotation can be split
+into one factor per key bit:
+\[
+  X^{-\bar\varphi}=X^{-\bar b}\cdot\prod_{i=1}^{n}X^{\bar a_is_i},
+  \qquad
+  X^{\bar a_is_i}=\begin{cases}X^{\bar a_i}&\text{if }s_i=1,\\1&\text{if }s_i=0.\end{cases}
+\]
+The first factor only uses public data. Each of the other factors is an
+if-then-else that depends on a secret bit, which is exactly what a CMux with
+$\BK_i=\mathrm{TRGSW}(s_i)$ computes. So the server starts from the trivial
+TRLWE ciphertext $\mathrm{ACC}=(0,X^{-\bar b}v)$ and, for $i=1,\dots,n$, replaces
+it by
+\[
+  \mathrm{CMux}\big(\BK_i,\;X^{\bar a_i}\cdot\mathrm{ACC},\;\mathrm{ACC}\big)
+  =\mathrm{ACC}+\BK_i\ext\big((X^{\bar a_i}-1)\cdot\mathrm{ACC}\big).
+\]
+After the $n$ steps, the accumulator encrypts $X^{-\bar\varphi}\cdot v$. The
+server knows every $\bar a_i$ and $\bar b$, but it does not know which of the
+$n$ steps actually rotated, so it never learns the total rotation. This is why
+the operation is called \emph{blind rotation}. Each step costs one external
+product and adds its error (Proposition~\ref{prop:extprod}), which is why the
+bootstrapping key must be so precise.
+
+\begin{example}[Bootstrapping an encryption of \textsf{true}, step by step]
+\label{ex:blindrot}
+Take $n=3$, $N=4$ (so there are $2N=8$ positions), the secret key $s=(1,0,1)$,
+and the gate test polynomial $v=\mu\,(1+X+X^2+X^3)$ with $\mu=\frac18$.
+
+\emph{The input.} Let $c$ be an LWE encryption of \textsf{true}, that is, of
+$+\frac18$, with error $e=0.003$. With the mask $\mathbf a=(0.37,\,0.61,\,0.24)$,
+the body is $b=0.37\cdot1+0.61\cdot0+0.24\cdot1+0.125+0.003=0.738$, and the
+phase is $b-(0.37+0.24)=0.128$.
+
+\emph{Step 1, modulus switching.} We multiply by $2N=8$ and round:
+$\bar b=\round{5.904}=6$ and
+$\bar{\mathbf a}=(\round{2.96},\round{4.88},\round{1.92})=(3,5,2)$. So
+$\bar\varphi=6-(3\cdot1+5\cdot0+2\cdot1)=1$, a position in the upper half, as
+expected for a phase close to $\frac18$. The server knows $\bar b$ and
+$\bar{\mathbf a}$, but not $\bar\varphi$.
+
+\emph{Step 3, blind rotation.} The accumulator starts as the trivial ciphertext
+$(0,X^{-6}v)$. Since $X^8=1$, we have $X^{-6}=X^{2}$, and
+$X^2v=\mu(X^2+X^3+X^4+X^5)=\mu(-1-X+X^2+X^3)$, because $X^4=-1$ and $X^5=-X$.
+The server then runs one CMux per key bit. It always does the same work, and
+the key decides which steps rotate:
+\begin{center}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+step & $\bar a_i$ & $s_i$ & effect & message of ACC & coefficients\\
+\midrule
+start & -- & -- & trivial ciphertext & $X^{-6}v$ & $[-\mu,-\mu,+\mu,+\mu]$\\
+$i=1$ & $3$ & $1$ & $\times X^{3}$ & $X^{-3}v$ & $[+\mu,-\mu,-\mu,-\mu]$\\
+$i=2$ & $5$ & $0$ & unchanged & $X^{-3}v$ & $[+\mu,-\mu,-\mu,-\mu]$\\
+$i=3$ & $2$ & $1$ & $\times X^{2}$ & $X^{-1}v$ & $[+\mu,+\mu,+\mu,-\mu]$\\
+\bottomrule
+\end{tabular}
+\end{center}
+From step $i=1$ on, the accumulator is a real ciphertext
+(Figure~\ref{fig:trivial}). The table shows the \emph{messages} it encrypts,
+which the server never sees.
+
+\emph{Step 4, sample extraction.} The constant coefficient of the final message
+is $+\mu=+\frac18$, so the output is an encryption of \textsf{true}, the sign of
+the input phase, with fresh noise. Figure~\ref{fig:blindrot} shows the same
+three steps for any test polynomial; there the result is $v_1=v_{\bar\varphi}$,
+the entry for slice $1$ (phases close to $\frac18$). With the gate test
+polynomial every $v_j$ is $\mu$, so any $\bar\varphi\in\{0,1,2,3\}$ would give
+$+\mu$ and any $\bar\varphi\in\{4,\dots,7\}$ would give $-\mu$.
+\end{example}
+
+\input{figures/fig_blindrot.tex}
+
+\subsection{Step 4: Sample Extraction}
+\label{sec:extract}
+
+Blind rotation gives a TRLWE ciphertext, which encrypts a whole table, but we
+only want its constant coefficient, and the next gate expects an LWE
+ciphertext. Luckily, one coefficient of a TRLWE ciphertext can be read as an
+LWE ciphertext without any computation. Write the accumulator as $(a,b)$. The
+constant coefficient of its phase $b-a\cdot s'$ is
+\[
+  b_0-a_0s'_0-\sum_{j=1}^{N-1}a_{N-j}s'_j,
+\]
+because, in the product $a\cdot s'$, the pairs of degrees that add up to $N$
+end up in the constant term with their sign changed ($X^N=-1$). This is the
+phase of the LWE ciphertext $\big((a_0,-a_{N-1},\dots,-a_1),\,b_0\big)$ under the
+key formed by the coefficients of $s'$, seen as a vector of $N$ bits
+(Figure~\ref{fig:extract}). Extraction only reorders coefficients and changes
+some signs, so it adds no error.
+
+\input{figures/fig_extract.tex}
+
+\subsection{Step 5: Key Switching}
+\label{sec:ks}
+
+\paragraph{Why it is needed.}
+The extracted ciphertext has the right message but the wrong format: it is
+encrypted under $s'$ and has size $N=1024$, while the inputs of every gate are
+encrypted under $s$ and have size $n=630$. Without a conversion, the result
+could not be used by another gate, because the bootstrapping key encrypts the
+bits of $s$, not the bits of $s'$.
+
+\paragraph{The idea.}
+We want to keep the phase $b-\sum_{i=1}^{N}a_is'_i$. If the server had LWE
+encryptions under $s$ of the products $a_is'_i$, it could subtract all of them
+from the trivial ciphertext $(\mathbf0,b)$ and get an encryption under $s$ with
+the same phase. It cannot store an encryption for every possible value of
+$a_i$, but, as in the gadget decomposition, it can work digit by digit. We
+write each $a_i$ with $t$ digits in base $\Bks=2^{\mathrm{basebit}}$,
+$a_i\approx\sum_{j=1}^{t}a_{i,j}\Bks^{-j}$ with $a_{i,j}\in\{0,\dots,\Bks-1\}$. The
+\emph{key-switching key} contains, for every coefficient $i$, level $j$ and digit
+value $v$, the LWE ciphertext
+$\KSK_{i,j,v}=\mathrm{LWE}_s\big(v\,s'_i/\Bks^{\,j}\big)$. Then
+\[
+  c'=(\mathbf{0},b)-\sum_{i=1}^{N}\sum_{j=1}^{t}\KSK_{i,j,a_{i,j}}
+\]
+has phase $b-\sum_is'_i\sum_ja_{i,j}\Bks^{-j}\approx b-\sum_ia_is'_i$ under $s$,
+plus the errors of the ciphertexts we subtracted. Since the table has an entry
+for every digit value, key switching only picks entries and subtracts them,
+with no multiplication at all.
+
+\begin{example}[One coefficient]
+With $\Bks=4$ and $t=8$, the coefficient $a_i=0.7$ has base-4 digits
+$(2,3,0,3,0,3,0,3)$, because $0.7=0.2303\ldots$ in base $4$. Its part of the key
+switching costs five subtractions, one for each nonzero digit
+(Figure~\ref{fig:kstable}). Doing the same for all $N=1024$ coefficients
+completes the key switching.
+\end{example}
+
+\input{figures/fig_kstable.tex}
+
+Algorithm~\ref{alg:bootstrap} puts the five steps together.
+
+\begin{algorithm}[!htb]
+\caption{Gate bootstrapping of an LWE ciphertext $c=(\mathbf{a},b)$ under $s$}
+\label{alg:bootstrap}
+\begin{algorithmic}[1]
+\Require $\mu\in\T$; $\BK_i=\mathrm{TRGSW}_{s'}(s_i)$; $\KSK$
+\Ensure LWE ciphertext under $s$ of $+\mu$ if $\varphi_s(c)\in(0,\frac12)$, of $-\mu$ otherwise
+\State $\bar b\gets\round{2Nb}$;\quad $v\gets\mu\,(1+X+\dots+X^{N-1})$
+  \Comment{steps 1 and 2}
+\State $\mathrm{ACC}\gets(0,\;X^{-\bar b}\cdot v)$ \Comment{trivial TRLWE ciphertext}
+\For{$i=1,\dots,n$} \Comment{step 3: blind rotation}
+  \State $\bar a_i\gets\round{2Na_i}$
+  \If{$\bar a_i\neq0$}
+    \State $\mathrm{ACC}\gets\mathrm{ACC}+\BK_i\ext\big((X^{\bar a_i}-1)\cdot\mathrm{ACC}\big)$
+      \Comment{CMux, Eq.~\eqref{eq:cmux}}
+  \EndIf
+\EndFor
+\State $(a,b)\gets\mathrm{ACC}$;\quad
+       $c'\gets\big((a_0,-a_{N-1},\dots,-a_1),\,b_0\big)$
+       \Comment{step 4: key $s'$}
+\State \Return $\mathrm{KeySwitch}(c',\KSK)$ \Comment{step 5: key $s$, size $n$}
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Why the Noise Is Reset}
+\label{sec:bsnoise}
+
+Where does the error of the output come from? Blind rotation starts from a
+trivial ciphertext with \emph{no} noise, so all the error it collects comes
+from the bootstrapping key, through the $n$ external products. Key switching
+then adds the errors of the table entries it subtracts. The error of the input
+does not enter any of these operations: it only affects which slice
+$\bar\varphi$ is chosen in step 1. So, as long as the input error plus the
+modulus-switching error keeps the phase in the correct half of the circle, the
+output is a correct encryption, and its error depends only on the evaluation
+key. Section~\ref{sec:noise} shows this with a deliberately noisy input.
+
+To put numbers on it, each of the $n$ CMux steps adds the error of one external
+product (Proposition~\ref{prop:extprod}), and key switching adds the error of up
+to $tN$ table entries plus the rounding of each $a_i$ to $t$ digits:
+\begin{align}
+  \vartheta_{\mathrm{BR}}&\le n\big(2\ell N\beta^2\vartheta_{\BK}+(1+N)\varepsilon^2\big),
+  \label{eq:varbr}\\
+  \vartheta_{\mathrm{KS}}&\le tN\vartheta_{\KSK}+N\cdot2^{-2(t\cdot\mathrm{basebit}+1)}.
+  \label{eq:varks}
+\end{align}
+With the parameters of Table~\ref{tab:params}, $\vartheta_{\mathrm{BR}}\le
+\BoundBR$ and $\vartheta_{\mathrm{BR}}+\vartheta_{\mathrm{KS}}\le\BoundTotal$,
+which is a standard deviation below $0.005$. These bounds have the same form as
+the analysis of \cite{chillotti2020tfhe}; Section~\ref{sec:noise} compares them
+with our measurements.
+
+\subsection{From a Sign Function to Logic Gates}
+\label{sec:gates}
+
+With the gate test polynomial, the bootstrapping returns $+\frac18$
+(\textsf{true}) when the phase of its input is in the upper half of the circle,
+and $-\frac18$ (\textsf{false}) when it is in the lower half. To compute a gate
+with two inputs, it is therefore enough to build, from the two inputs, a
+ciphertext whose phase is in the upper half exactly when the output of the
+gate should be \textsf{true}. Linear combinations are free
+(Section~\ref{sec:limits}), so we only need to choose the right one.
+
+\paragraph{NAND.}
+Take $(\mathbf{0},\frac18)-c_x-c_y$, the trivial ciphertext of $\frac18$ minus
+the two inputs. Since the inputs are $\pm\frac18$, its phase is
+\[
+  \tfrac18-(\pm\tfrac18)-(\pm\tfrac18)\in
+  \big\{\underbrace{\tfrac38}_{(0,0)},\;
+        \underbrace{\tfrac18}_{(0,1),(1,0)},\;
+        \underbrace{-\tfrac18}_{(1,1)}\big\},
+\]
+which is in the upper half for every input except $(1,1)$. This is the truth
+table of NAND (Figure~\ref{fig:gates}a). All these points are at distance
+$\frac18$ from the closest boundary ($0$ or $\frac12$). This distance is the
+\emph{margin}: the input errors plus the modulus-switching error must stay
+below it for the gate to give the right answer.
+
+\begin{example}[One NAND gate]
+Let $c_x$ and $c_y$ both encrypt \textsf{true}, with phases $\frac18+e_x$ and
+$\frac18+e_y$. The combination $(\mathbf0,\frac18)-c_x-c_y$ has phase
+$\frac18-\frac18-\frac18-(e_x+e_y)=-\frac18-(e_x+e_y)$, which is in the lower half
+as long as $|e_x+e_y|$ plus the modulus-switching error is less than $\frac18$.
+So the bootstrapping returns an encryption of $-\frac18$, that is,
+\textsf{false}, with fresh noise that no longer depends on $e_x$ and $e_y$.
+\end{example}
+
+\paragraph{Other gates.}
+The same reasoning gives AND, OR and NOR, by changing the constant and the
+signs (Table~\ref{tab:gates}). XOR needs one more idea. The phase of $c_x+c_y$
+is $-\frac14$, $0$ or $+\frac14$, and the middle value, which corresponds to
+different inputs, is exactly on the boundary. Doubling fixes this: $2(c_x+c_y)$
+has phase $-\frac12$, $0$ or $+\frac12$, and since $-\frac12$ and $+\frac12$ are
+the same point of the torus, the two cases with equal inputs now fall on the
+same point. Adding $\frac14$ moves them to $-\frac14$ and the case with different
+inputs to $+\frac14$ (Figure~\ref{fig:gates}b). Doubling also doubles the input
+errors, but the margin doubles too. NOT does not need a bootstrapping at all:
+$-c$ swaps $\pm\frac18$ and only changes the sign of the error.
+
+\begin{table}[!htb]
+\centering
+\caption{Linear combination computed before the bootstrapping of each gate.}
+\label{tab:gates}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lll@{\qquad}lll@{}}
+\toprule
+Gate & Combination & Margin & Gate & Combination & Margin\\
+\midrule
+NAND & $(\mathbf{0},+\frac18)-c_x-c_y$ & $\frac18$ &
+AND  & $(\mathbf{0},-\frac18)+c_x+c_y$ & $\frac18$\\[2pt]
+OR   & $(\mathbf{0},+\frac18)+c_x+c_y$ & $\frac18$ &
+NOR  & $(\mathbf{0},-\frac18)-c_x-c_y$ & $\frac18$\\[2pt]
+XOR  & $(\mathbf{0},+\frac14)+2(c_x+c_y)$ & $\frac14$ &
+XNOR & $(\mathbf{0},-\frac14)-2(c_x+c_y)$ & $\frac14$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{figures/fig_gates.tex}
+
+\paragraph{MUX.}
+The multiplexer $\mathrm{MUX}(s,x,y)$, ``$x$ if $s$ is true, otherwise $y$'', can
+be written as $(s\wedge x)\vee(\neg s\wedge y)$, which would need three
+bootstrappings. But the two ANDs are never true at the same time, so their OR
+can be replaced by a simple sum. We compute both ANDs with bootstrappings
+\emph{without} key switching (so their outputs are under $s'$), add the two
+results, which gives $-\frac14$ or $0$, add $\frac18$ to get $-\frac18$ or
+$+\frac18$, and do a single key switching at the end (Table~\ref{tab:mux}). A
+MUX therefore costs two blind rotations and one key switching.
+
+\begin{table}[!htb]
+\centering
+\caption{The MUX gate on all inputs. $u_1$ and $u_2$ are the results of the two
+bootstrappings without key switching. At most one of them is $+\frac18$, so
+$u_1+u_2+\frac18$ is always $\pm\frac18$.}
+\label{tab:mux}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}ccc@{\qquad}cc@{\qquad}cc@{}}
+\toprule
+$s$ & $x$ & $y$ & $u_1=\mathrm{BR}(s\wedge x)$ & $u_2=\mathrm{BR}(\neg s\wedge y)$
+  & $u_1+u_2+\frac18$ & output\\
+\midrule
+0 & 0 & 0 & $-\frac18$ & $-\frac18$ & $-\frac18$ & $0=y$\\
+0 & 0 & 1 & $-\frac18$ & $+\frac18$ & $+\frac18$ & $1=y$\\
+0 & 1 & 0 & $-\frac18$ & $-\frac18$ & $-\frac18$ & $0=y$\\
+0 & 1 & 1 & $-\frac18$ & $+\frac18$ & $+\frac18$ & $1=y$\\
+1 & 0 & 0 & $-\frac18$ & $-\frac18$ & $-\frac18$ & $0=x$\\
+1 & 0 & 1 & $-\frac18$ & $-\frac18$ & $-\frac18$ & $0=x$\\
+1 & 1 & 0 & $+\frac18$ & $-\frac18$ & $+\frac18$ & $1=x$\\
+1 & 1 & 1 & $+\frac18$ & $-\frac18$ & $+\frac18$ & $1=x$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{An Encrypted Adder}
+\label{sec:adder}
+
+Every gate gives back a ciphertext in the same format as its inputs and with
+fresh noise, so gates can be connected into circuits of any size and depth. As
+a complete example, we built a circuit that adds two encrypted integers.
+
+\paragraph{Encrypting an integer.}
+TFHE encrypts bits, so an $n$-bit integer is encrypted bit by bit, as $n$
+separate LWE ciphertexts, from the least significant bit to the most
+significant one. For example, $x=11=1011_2$ is stored as the four ciphertexts
+$(\mathrm{Enc}(1),\mathrm{Enc}(1),\mathrm{Enc}(0),\mathrm{Enc}(1))$.
+
+\paragraph{Adding by hand in binary.}
+The circuit follows the method we learn in school: add the two numbers column
+by column, from right to left, and carry a $1$ to the next column when the
+column sum is $2$ or more. For $11+6$:
+\begin{center}
+\small
+\begin{tabular}{@{}r@{\qquad}ccccc@{}}
+carries & 1 & 1 & 1 & 0 & \\
+$x=11$ &   & 1 & 0 & 1 & 1\\
+$y=6$  &   & 0 & 1 & 1 & 0\\
+\midrule
+$x+y=17$ & 1 & 0 & 0 & 0 & 1\\
+\end{tabular}
+\end{center}
+In each column $i$ there are three input bits, $x_i$, $y_i$ and the incoming
+carry $c_i$, and two output bits, the sum bit $\mathit{sum}_i$ and the outgoing
+carry $c_{i+1}$. A circuit that computes one column is called a \emph{full
+adder}, and Table~\ref{tab:fulladder} gives its truth table.
+
+\begin{table}[!htb]
+\centering
+\caption{Truth table of a full adder, with the formulas used by our circuit
+($p=x\oplus y$).}
+\label{tab:fulladder}
+\small
+\begin{tabular}{@{}ccc@{\qquad}cc@{\qquad}c@{}}
+\toprule
+$x_i$ & $y_i$ & $c_i$ & $\mathit{sum}_i$ & $c_{i+1}$ & which case\\
+\midrule
+0 & 0 & 0 & 0 & 0 & $x_i=y_i$: carry is $x_i=0$\\
+0 & 0 & 1 & 1 & 0 & $x_i=y_i$: carry is $x_i=0$\\
+0 & 1 & 0 & 1 & 0 & $x_i\ne y_i$: carry is $c_i=0$\\
+0 & 1 & 1 & 0 & 1 & $x_i\ne y_i$: carry is $c_i=1$\\
+1 & 0 & 0 & 1 & 0 & $x_i\ne y_i$: carry is $c_i=0$\\
+1 & 0 & 1 & 0 & 1 & $x_i\ne y_i$: carry is $c_i=1$\\
+1 & 1 & 0 & 0 & 1 & $x_i=y_i$: carry is $x_i=1$\\
+1 & 1 & 1 & 1 & 1 & $x_i=y_i$: carry is $x_i=1$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{From the truth table to gates.}
+The sum bit is $1$ when an odd number of the three inputs are $1$, so
+$\mathit{sum}_i=x_i\oplus y_i\oplus c_i$. For the carry, the last column of
+Table~\ref{tab:fulladder} shows a simple rule. When $x_i=y_i$, the outgoing
+carry is equal to $x_i$, whatever the incoming carry is: two $1$s always produce
+a carry and two $0$s never do. When $x_i\ne y_i$, the column sum is $1+c_i$, so
+the outgoing carry is just the incoming one. This is a choice controlled by
+$p_i=x_i\oplus y_i$, so
+\[
+  \mathit{sum}_i=p_i\oplus c_i,\qquad c_{i+1}=\mathrm{MUX}(p_i;\,c_i,\,x_i).
+\]
+The value $p_i$ is used twice, so one column needs only two XOR gates and one
+MUX (Figure~\ref{fig:adder}), that is, four blind rotations. Adding two $n$-bit
+numbers takes $n$ columns and $4n$ blind rotations, and the result has $n+1$
+bits, the last one being the final carry. The first carry, $c_0=0$, is a trivial
+ciphertext of \textsf{false}, which the server can create without any key.
+
+\input{figures/fig_adder.tex}
+
+\begin{example}[$11+6$ on encrypted bits]
+With $x=11$, $y=6$ and $c_0=0$, the circuit goes through the four columns as
+follows (bits from the least significant one):
+\begin{center}
+\small
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+column $i$ & $x_i$ & $y_i$ & $c_i$ & $p_i=x_i\oplus y_i$ & $\mathit{sum}_i=p_i\oplus c_i$
+  & $c_{i+1}=\mathrm{MUX}(p_i;c_i,x_i)$\\
+\midrule
+0 & 1 & 0 & 0 & 1 & 1 & $c_0=0$\\
+1 & 1 & 1 & 0 & 0 & 0 & $x_1=1$\\
+2 & 0 & 1 & 1 & 1 & 0 & $c_2=1$\\
+3 & 1 & 0 & 1 & 1 & 0 & $c_3=1$\\
+\bottomrule
+\end{tabular}
+\end{center}
+The output bits are $(\mathit{sum}_0,\dots,\mathit{sum}_3,c_4)=(1,0,0,0,1)$,
+i.e., $10001_2=17$, the same result as by hand. On encrypted data, every entry of
+this table is a ciphertext, and the server never sees any of these bits.
+Because of this, the server cannot stop early or skip a column when there is
+no carry: it always evaluates the same $12$ gates, whatever the inputs are.
+\end{example}
+
+%% ===========================================================================
+\section{Implementation}
+\label{sec:impl}
+
+\subsection{Organization}
+
+The library is made of eleven C++ header files with \code{inline} functions, so
+each test or program is a single source file and nothing has to be linked.
+The headers form a chain in which each layer includes the previous ones
+(Figure~\ref{fig:arch}). Each header has its own unit test, which checks it
+against a simple, independent reference before the next layer is built on top
+of it (Table~\ref{tab:tests}). The library has \LibLines{} lines of code, not
+counting comments and blank lines. We use the parameters of the 128-bit
+gate-bootstrapping set of the original library (Table~\ref{tab:params}), so
+that the comparison in Section~\ref{sec:eval} is fair.
+
+\input{figures/fig_arch.tex}
+
+\begin{table}[!htb]
+\centering
+\caption{Parameters (the same as the 128-bit set of the original library).}
+\label{tab:params}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Symbol & Value & Role\\
+\midrule
+$n$ & $630$ & size of the LWE key; number of external products per bootstrapping\\
+$N$ & $1024$ & degree of the polynomials; the phase is rounded to $2N$ positions\\
+$\ell$, $\Bg$ & $3$, $2^7$ & number of digits and base of the gadget decomposition\\
+$t$, $\Bks$ & $8$, $2^2$ & number of digits and base of the key switching\\
+$\sigma_{\mathrm{LWE}}$ & $2^{-15}$ & noise of LWE ciphertexts and of $\KSK$\\
+$\sigma_{\BK}$ & $2^{-25}$ & noise of the TRGSW ciphertexts of $\BK$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+\centering
+\caption{Unit tests. \code{make test} runs them in order and stops at the first
+failed check.}
+\label{tab:tests}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Test & What it checks\\
+\midrule
+\code{test01\_torus} & conversions, wrap-around, decoding in $\Z_8$, Gaussian noise\\
+\code{test02\_lwe} & decryption, additions, noise of a sum growing by $\sqrt2$\\
+\code{test03\_poly} & $X^N=-1$, $X^{2N}=1$, rotation against the direct product\\
+\code{test04\_fft} & FFT and back; products identical to the direct ones\\
+\code{test05\_trlwe} & TRLWE decryption, addition, rotation by $X^{100}$\\
+\code{test06\_trgsw} & digit range and error, $\mathrm{TRGSW}(m)\ext d$, CMux\\
+\code{test07\_keys} & key sizes; each $\BK_i$ selects correctly; $\KSK$ contents\\
+\code{test08\_blindrotate} & rotation without noise, sign function, four-entry table\\
+\code{test09\_bootstrap} & key switching, bootstrappings in a row, noise reduction\\
+\code{test10\_gates} & truth tables, 50 NAND gates in a row, majority circuit\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Torus Arithmetic}
+\label{sec:torusimpl}
+
+A computer cannot store real numbers exactly, so implementations use a
+discretized torus: the 32-bit integer $t$ stands for the real number
+$t/2^{32}$. With this choice the reduction modulo $1$ costs nothing, because
+unsigned 32-bit arithmetic already wraps around modulo $2^{32}$.
+
+\begin{example}[Torus arithmetic in 32 bits]
+$0.75+0.5=1.25\equiv0.25$ becomes
+$\texttt{0xC0000000}+\texttt{0x80000000}=\texttt{0x1\,4000\,0000}$, and keeping
+the 32 low bits gives $\texttt{0x40000000}=2^{30}$, which is $0.25$. In the same
+way, $3\times0.375\equiv0.125$ becomes
+$3\times\texttt{0x60000000}=\texttt{0x1\,2000\,0000}\mapsto\texttt{0x20000000}$.
+\end{example}
+
+A torus element is therefore a \code{uint32\_t}, and three rules of C++ do all
+the work. First, unsigned arithmetic is defined modulo $2^{32}$, which is
+exactly what the torus needs. Signed overflow, on the other hand, is undefined
+behavior, and an optimizing compiler may break code that relies on it. Second,
+in an expression like \code{k * t} with a signed \code{k}, the integer is
+converted to unsigned before the product, which still gives the right result
+modulo $2^{32}$ when $k$ is negative. Third, \code{static\_cast<int32\_t>(t)}
+reads the same bits as a signed integer, that is, as the representative of $t$
+in $[-\frac12,\frac12)$. We use this to measure noise (a small negative error
+reads as $-0.001$ and not as $0.999$) and to decrypt a bit (by the sign of its
+phase). The bit $\mu=\frac18$ of the gates is the 32-bit value
+\texttt{0x20000000}, so the gate test polynomial is built with the single line
+\code{TorusPoly testv(N, MU)}.
+
+\subsection{Fast Polynomial Products: the Negacyclic FFT}
+\label{sec:fft}
+
+\paragraph{Why we need it.}
+Every external product multiplies $2\ell=6$ digit polynomials by the two
+polynomials of a TRGSW row, so it computes $12$ products in $\ZN\times\TN$.
+A gate does about $n=630$ external products, which makes about $7500$
+polynomial products per gate. If we compute each product term by term, it
+costs $N^2\approx10^6$ multiplications, and a single gate would take several
+seconds. Instead, we use the well-known idea of multiplying polynomials through
+their values, adapted to polynomials modulo $X^N+1$. We explain it in four
+steps.
+
+\paragraph{Step 1: multiply values instead of coefficients.}
+A polynomial of degree less than $N$ is completely determined by its values at
+$N$ different points, and the value of a product is the product of the values,
+$(a\cdot b)(x)=a(x)\,b(x)$. So we can evaluate both factors at enough points,
+multiply the values one by one, and then recover the coefficients of the
+product from its values (interpolation).
+
+\begin{example}[Multiplying through values]
+Take $a(x)=1+2x$ and $b(x)=3+x$. Their product has degree $2$, so three points
+are enough; we use $0$, $1$ and $-1$. The values are $a=(1,3,-1)$ and
+$b=(3,4,2)$, and multiplying them one by one gives $(3,12,-2)$. The only
+polynomial of degree $2$ with these values is $3+7x+2x^2$, which is indeed
+$(1+2x)(3+x)$.
+\end{example}
+
+Multiplying the values costs only $N$ operations. Evaluating and interpolating
+in a direct way would still cost about $N^2$ operations, but with the fast
+Fourier transform (FFT) \cite{cooley1965fft} both cost about $N\log N$, if the
+points are well chosen.
+
+\paragraph{Step 2: choose points where the reduction is automatic.}
+We do not want the full product $a\cdot b$, which has degree up to $2N-2$, but
+its remainder modulo $X^N+1$. If we evaluate at a root $\omega$ of $X^N+1$, the
+difference disappears: since $\omega^N=-1$, the product and its remainder have
+the same value at $\omega$, because they differ by a multiple of $X^N+1$. The
+$N$ roots of $X^N+1$ are the points $e^{i\pi(2k+1)/N}$ of the unit circle, the
+odd multiples of $\pi/N$ (Figure~\ref{fig:roots}). Moreover, a polynomial with
+real coefficients takes conjugate values at conjugate points, so we only need
+one root of each conjugate pair. That leaves $N/2$ complex values, and we use
+the roots $\omega_k=e^{i\pi(4k+1)/N}$ for $k=0,\dots,N/2-1$.
+
+\input{figures/fig_roots.tex}
+
+\begin{example}[A negacyclic product through values, $N=4$]
+Let $a=1+X$ and $b=X^3$. Computed directly, $a\cdot b=X^3+X^4=-1+X^3$, so the
+result is $r=[-1,0,0,1]$. The two points are $\omega_0=e^{i\pi/4}$ and
+$\omega_1=e^{i5\pi/4}$:
+\begin{center}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+ & $\omega_0=e^{i\pi/4}$ & $\omega_1=e^{i5\pi/4}$\\
+\midrule
+$a(\omega)=1+\omega$ & $1.707+0.707i$ & $0.293-0.707i$\\
+$b(\omega)=\omega^3$ & $-0.707+0.707i$ & $0.707-0.707i$\\
+$a(\omega)\,b(\omega)$ & $-1.707+0.707i$ & $-0.293-0.707i$\\
+$r(\omega)=-1+\omega^3$ & $-1.707+0.707i$ & $-0.293-0.707i$\\
+\bottomrule
+\end{tabular}
+\end{center}
+The products of the values are already the values of the reduced product $r$,
+because $\omega^4=-1$ at both points.
+\end{example}
+
+\paragraph{Step 3: turn it into a standard FFT.}
+Evaluating at the points $\omega_k$ is not yet a standard discrete Fourier
+transform (DFT), whose points are the roots of unity $e^{2\pi ik/M}$. Two tricks
+close the gap. First, since $\omega_k^{N/2}=e^{i\pi(4k+1)/2}=i$, the terms of
+degree $j$ and $j+N/2$ can be grouped:
+$p_j\omega_k^j+p_{j+N/2}\,\omega_k^{j+N/2}=(p_j+i\,p_{j+N/2})\,\omega_k^j$. This
+\emph{folds} the $N$ real coefficients into $N/2$ complex numbers. Second, we
+write $\omega_k^j=e^{i\pi j/N}\cdot e^{2\pi ijk/(N/2)}$. The first factor depends
+only on $j$, and we multiply it into the folded vector (the \emph{twist}). The
+second factor is a standard root of unity. Together,
+\[
+  p(\omega_k)=\sum_{j<N/2}\underbrace{\big(p_j+i\,p_{j+N/2}\big)\,e^{i\pi j/N}}_{z_j}
+  \;e^{2\pi i jk/(N/2)},
+\]
+which is the standard DFT of size $N/2$ of the folded and twisted vector $z$
+(Figure~\ref{fig:fft}). This is a special case of the weighted transforms of
+\cite{crandall1994dwt}. To go back from values to coefficients, we do the same
+steps in reverse order: inverse DFT, multiply by $e^{-i\pi j/N}$, and unfold the
+real and imaginary parts.
+
+\input{figures/fig_fft.tex}
+
+\begin{example}[The complete computation for $N=4$]
+We redo the previous example with the transform. To transform a polynomial
+$p=[p_0,p_1,p_2,p_3]$ we fold it into $z=(p_0+ip_2,\;p_1+ip_3)$, multiply the
+second entry by the twist $e^{i\pi/4}=0.707+0.707i$, and apply a DFT of size $2$,
+which simply returns the sum and the difference of the two entries:
+\begin{center}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & folded $z$ & twisted & DFT: $(z_0+z_1,\;z_0-z_1)$\\
+\midrule
+$a=[1,1,0,0]$ & $(1,\;1)$ & $(1,\;0.707+0.707i)$ & $(1.707+0.707i,\;0.293-0.707i)$\\
+$b=[0,0,0,1]$ & $(0,\;i)$ & $(0,\;-0.707+0.707i)$ & $(-0.707+0.707i,\;0.707-0.707i)$\\
+\bottomrule
+\end{tabular}
+\end{center}
+These are the values of $a$ and $b$ at $\omega_0$ and $\omega_1$ from the
+previous table. Multiplying them one by one gives
+$P=(-1.707+0.707i,\;-0.293-0.707i)$. To go back, the inverse DFT of size $2$
+returns half the sum and half the difference, $(-1,\;-0.707+0.707i)$; undoing
+the twist (multiplying the second entry by $e^{-i\pi/4}$) gives $(-1,\;i)$; and
+unfolding, with real parts as $r_0,r_1$ and imaginary parts as $r_2,r_3$, gives
+$r=[-1,0,0,1]$, the same result as the direct computation.
+\end{example}
+
+\paragraph{Step 4: the FFT itself.}
+A DFT of size $M$ computed directly needs $M^2$ multiplications. The FFT of
+\cite{cooley1965fft} is faster because it splits the problem: a DFT of size $M$
+can be computed from two DFTs of size $M/2$, one on the entries with even index
+and one on the entries with odd index, and those can be split again, until
+size $1$. Figure~\ref{fig:butterfly} shows the case $M=4$. After putting the
+inputs in a special order (bit-reversed), each round combines pairs of values
+with a \emph{butterfly}, $(u,v)\mapsto(u+w\,v,\;u-w\,v)$, where $w$ is a root of
+unity. For our size, $M=N/2=512$, this means $9$ rounds of $256$ butterflies,
+that is, $2304$ butterflies instead of about $260{,}000$ multiplications. We
+compute all the twist factors, roots of unity and the bit-reversed order once,
+when the \code{NegFFT} object is created.
+
+\input{figures/fig_butterfly.tex}
+
+\paragraph{Is double precision enough?}
+The FFT computes with \code{double} numbers, which have 53 bits of precision,
+but the result must be exact as a 32-bit integer. In every product of the
+scheme, one factor has small coefficients (digits with $|d|\le64$, or key bits)
+and the other has torus coefficients, read as signed integers with
+$|t|\le2^{31}$. Each coefficient of the product is a sum of $N=2^{10}$ such
+terms, so its absolute value is at most $2^6\cdot2^{31}\cdot2^{10}=2^{47}$, which
+is less than $2^{53}$. Rounding the result to the nearest integer therefore
+gives the exact value. Our unit test confirms this: the FFT products were
+identical, bit by bit, to the direct ones, and $\FftSpeedup\times$ faster
+($\FftNaive$\,\textmu s against $\FftFast$\,\textmu s for $N=1024$).
+
+\paragraph{A detail about complex numbers.}
+The product of two \code{std::complex<double>} follows the C99 rules for
+infinities and NaN values, which makes the compiler unable to vectorize it and
+slows down the FFT loop. We use a hand-written function \code{cmul} with the
+usual formula $(x+iy)(u+iv)=(xu-yv)+i(xv+yu)$.
+
+\subsection{Signed Digits with One Addition: the Offset Trick}
+\label{sec:offset}
+
+\paragraph{The problem.}
+Every external product decomposes $2N=2048$ coefficients into $2N\ell=6144$
+digits, so the gadget decomposition must be fast. Ordinary digits in $[0,\Bg)$
+would be easy: they are just groups of bits of $t$. But we want signed digits
+in $[-\Bg/2,\Bg/2)$, because they are half as large ($\beta=\Bg/2$ instead of
+$\Bg$), and the main noise term of Proposition~\ref{prop:extprod} grows with
+$\beta^2$, so signed digits give four times less noise.
+
+\paragraph{The slow way.}
+To get signed digits from ordinary ones, we can work from the last digit to the
+first, like in a manual subtraction: every digit that is $\Bg/2$ or larger
+becomes negative by subtracting $\Bg$, and we add $1$ to the digit on its left.
+Before that, we also have to round, using the part of $t$ that is thrown away.
+Take base $10$ with two digits (digits in $[-5,5)$) and $t=0.9551$. Rounding to
+two digits gives $0.96$, because the discarded part, $51$, is at least half.
+The digits are $9$ and $6$. The last digit, $6$, is too large, so it becomes
+$6-10=-4$ and the $9$ becomes $10$. Now $10$ is too large, so it becomes $0$ and
+gives a $1$ to the left, which is a full turn of the circle and can be ignored.
+The result is $(0,-4)$: indeed $0-0.04=-0.04\equiv0.96$. This works, but it needs
+a loop with tests and carries, for each of the $6144$ digits.
+
+\paragraph{The trick.}
+The same result can be obtained with one addition. Add to $t$ a constant, the
+\emph{offset}, that has $\Bg/2$ in every digit position plus half of the
+position after the last digit; read the ordinary digits of the sum; and
+subtract $\Bg/2$ from each of them. In base $10$ with two digits, the offset is
+$0.555$. Table~\ref{tab:offset10} applies the trick to three values.
+
+\begin{table}[!htb]
+\centering
+\caption{The offset trick in base $10$ with two digits: add $0.555$, keep the
+part after the decimal point, take the two digits and subtract $5$ from each.}
+\label{tab:offset10}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+$t$ & $t+0.555$ & digits & minus $5$ & value & error\\
+\midrule
+$0.7316$ & $1.2866\to0.2866$ & $2,\ 8$ & $-3,\ 3$ & $-0.27\equiv0.73$ & $0.0016$\\
+$0.7366$ & $1.2916\to0.2916$ & $2,\ 9$ & $-3,\ 4$ & $-0.26\equiv0.74$ & $0.0034$\\
+$0.9551$ & $1.5101\to0.5101$ & $5,\ 1$ & $0,\ -4$ & $-0.04\equiv0.96$ & $0.0049$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The first row is Example~\ref{ex:decimal}. The second row shows the rounding:
+the discarded part of $0.7366$ is $66$, so the value is rounded up to $0.74$.
+The third row is the value we decomposed the slow way, and it gives the same
+digits $(0,-4)$, including the chain of two carries. In every row the error is
+at most $\varepsilon=0.005$.
+
+\paragraph{Why it works.}
+Adding $5$ to every digit and later subtracting $5$ from every digit does not
+change the value. What changes is that the addition causes a carry exactly
+when a digit was $5$ or more, and that is exactly when the slow way had to make
+the digit negative and add $1$ to its left neighbor. The extra half digit at
+the end does the rounding in the same way: it causes a carry into the last
+digit exactly when the discarded part is at least half. The following lemma
+states this for our binary case, where a digit is a group of
+$\beta_{\mathrm{bit}}$ bits.
+
+\begin{lemma}[Offset trick]
+\label{lem:offset}
+Let $q=2^{32}$, $\Bg=2^{\beta_{\mathrm{bit}}}$ with $\ell\beta_{\mathrm{bit}}<32$,
+let $h_i=2^{32-i\beta_{\mathrm{bit}}}$ (the integer that stands for $\Bg^{-i}$),
+and
+\[
+  \mathit{offset}=\sum_{i=1}^{\ell}\frac{\Bg}{2}\,h_i+\frac{h_\ell}{2}.
+\]
+For $t\in\Z_q$, let $t'=t+\mathit{offset}\bmod q$, let $u_i\in[0,\Bg)$ be the
+$i$-th group of $\beta_{\mathrm{bit}}$ bits of $t'$ from the top, i.e.,
+$u_i=\lfloor t'/h_i\rfloor\bmod\Bg$, and let $d_i=u_i-\Bg/2$. Then
+$d_i\in[-\Bg/2,\Bg/2)$ and $\big|t-\sum_id_ih_i \bmod q\big|\le h_\ell/2$, so the
+digits $(d_i)$ satisfy Eq.~\eqref{eq:gadget}.
+\end{lemma}
+
+\begin{proof}
+We can write $t'=\sum_{i=1}^{\ell}u_ih_i+r$ with $0\le r<h_\ell$. Then, modulo $q$,
+$t=t'-\mathit{offset}=\sum_i(u_i-\Bg/2)\,h_i+(r-h_\ell/2)=\sum_id_ih_i+(r-h_\ell/2)$,
+and $|r-h_\ell/2|\le h_\ell/2$, which is $\varepsilon=1/(2\Bg^\ell)$ in torus
+units. The range of $d_i$ follows from $u_i\in[0,\Bg)$.
+\end{proof}
+
+\paragraph{In binary.}
+With $\Bg=2^7$ and $\ell=3$, a digit is a group of $7$ bits, and the offset has
+$64$ in each of the three groups and $2^{10}$ in the discarded part.
+Figure~\ref{fig:gadget} shows the computation for $t=0.7$: one 32-bit addition,
+then each digit is obtained with a shift, a mask and a subtraction. The code
+below is the complete decomposition of one coefficient; the offset is computed
+only once.
+
+\input{figures/fig_gadget.tex}
+
+\begin{lstlisting}
+uint32_t t = p[j] + g.offset;             // one addition: all carries
+for (int i = 0; i < g.ell; ++i) {
+    uint32_t digit = (t >> (32 - (i + 1) * g.Bgbit)) & g.mask; // [0,Bg)
+    out[i][j] = int32_t(digit) - int32_t(g.halfBg);     // [-Bg/2,Bg/2)
+}
+\end{lstlisting}
+
+The same idea of ``adding half before cutting'' is used in three other places:
+to decode messages, in modulus switching (where $2^{31}$ is added to $2N\cdot t$,
+computed in 64 bits, before dropping the 32 low bits), and in key switching,
+where a half digit is added to each $a_i$ so that its $t$ digits are rounded
+instead of truncated.
+
+\subsection{External Product in the Frequency Domain}
+
+The same rows of the bootstrapping key are used in every gate, so we store
+them already transformed by the FFT: each TRGSW is kept as $2\ell$ rows of two
+polynomials, each one as $N/2$ complex values. We also add up the products of
+Eq.~\eqref{eq:extprod} while still in the frequency domain, where addition and
+multiplication are done value by value (Figure~\ref{fig:extprod}). So an
+external product costs $2\ell=6$ forward transforms (one per digit polynomial),
+$4\ell=12$ value-by-value products, and only $2$ inverse transforms, about
+$8\times630\approx5000$ FFTs of size $512$ per gate. The price is memory: a
+complex \code{double} takes $16$ bytes for every two coefficients, twice as
+much as the coefficients themselves, so the bootstrapping key takes
+\BkMB\,MiB. Blind rotation also skips the steps where $\bar a_i=0$, since
+$X^0-1=0$.
+
+\input{figures/fig_extprod.tex}
+
+\subsection{Key-Switching Table}
+
+The key-switching key stores one ciphertext for every possible digit value, so
+that key switching needs no multiplications: at most $Nt=8192$ subtractions of
+vectors of $n+1$ torus elements, which take about \OurKS\,ms. The
+$N\cdot t\cdot\Bks=32768$ ciphertexts, \KskMB\,MiB in total, are stored in a
+single array, with entry $(i,j,v)$ at position $(i\,t+j)\,\Bks+v$, so that the
+ciphertexts used for one coefficient are next to each other in memory. Entries
+with $v=0$ are never used; they hold a trivial encryption of zero so that the
+indexing stays simple.
+
+%% ===========================================================================
+\section{Experimental Evaluation}
+\label{sec:eval}
+
+The project proposal set four criteria for the comparison with the original
+library: correctness (does every gate decrypt to the right bit?), performance
+(how long does a gate take, and where is the time spent?), memory (how large
+are the keys?) and noise (does the measured error match the theory?). This
+section answers them in this order, after describing how we ran the
+experiments.
+
+\subsection{Setup}
+
+We ran all measurements on a laptop with an \CPU{} processor, running Linux,
+on a single thread fixed to one performance core, with the power profile set to
+performance. Our code was compiled with \Compiler{} and the options
+\code{-O3 -march=native}. The original library \cite{tfhelib} was compiled with
+its own optimized configuration in two versions that differ only in the FFT:
+\emph{spqlios-fma}, written in assembly with AVX2 and FMA instructions, and
+\emph{nayuki-portable}, written in plain C. Both use the same 128-bit parameters
+as ours (Table~\ref{tab:params}). The programs \code{apps/bench.cpp} and
+\code{compare/bench\_original.cpp} do the same measurements with the two
+libraries: the time to generate the keys, the average time of $500$ NAND gates,
+the error of $500$ gates with random inputs (phase minus the expected
+$\pm\frac18$), and the number of decryption errors. Each run creates new keys.
+We did \OurRuns{} runs of our implementation and \OrigRuns{} of each version of
+the original library, and we report the range of the results.
+
+\subsection{Correctness}
+
+All ten unit tests pass. The adder of Section~\ref{sec:adder} gave the right
+sum in every run: \AdderEightText{} in \AdderEight\,s, \AdderSixteenText{} in
+\AdderSixteen\,s, and \AdderTwentyFourText{} in \AdderTwentyFour\,s. The time
+grows linearly with the number of bits, as expected from four blind rotations
+per bit. Across the benchmark and noise experiments, \TotalGates{} gates with
+random inputs gave no decryption error, and neither did the original library in
+its \OrigGates{} gates. This agrees with the noise margin: the input of a NAND
+is the sum of two bootstrapping outputs plus the modulus-switching error, with
+a standard deviation of about $0.005$, while the margin is $\frac18=0.125$,
+more than $20$ standard deviations away.
+
+\subsection{Performance}
+
+Table~\ref{tab:perf} and Figure~\ref{fig:time} summarize the comparison. Our
+implementation computes a NAND gate in \OurNandMean\,ms, which is
+$\SlowdownSpq\times$ slower than the original library with the assembly FFT and
+$\SpeedupNay\times$ faster than the same library with the portable FFT. Since
+the rest of the algorithm is the same in all three cases, this shows that the
+speed of TFHE depends mostly on the quality of the FFT. Key generation is also
+faster in our implementation. A likely reason is that the original library
+creates and keeps the bootstrapping key both as coefficients and in the
+frequency domain, while ours keeps only the second form.
+
+\begin{table}[!htb]
+\centering
+\caption{Comparison with the original library (range over the runs, $500$ gates
+per run, one thread). Memory is the peak memory used by the benchmark program.}
+\label{tab:perf}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & This work & \multicolumn{2}{c}{Original library}\\
+\cmidrule(l){3-4}
+ & & spqlios-fma & nayuki-portable\\
+\midrule
+Time per NAND gate (ms) & \OurNandRange & \SpqNandRange & \NayNandRange\\
+Key generation (s) & \OurKeygenRange & \SpqKeygenRange & \NayKeygenRange\\
+Output error variance ($10^{-5}$) & \OurVarRange & \SpqVarRange & \NayVarRange\\
+Largest $|$mean$|$ of the output error & \OurMeanMax & \SpqMeanMax & \NayMeanMax\\
+Decryption errors & 0 in \OurBenchGates & 0 in \OrigGatesEach & 0 in \OrigGatesEach\\
+Peak memory (MiB) & \OurRSS & \SpqRSS & \NayRSS\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{figures/fig_time.tex}
+
+\paragraph{Where the time goes.}
+To find the bottlenecks, we measured the time of each operation used by the
+blind rotation on its own, and multiplied it by the number of times it runs
+in one gate (Figure~\ref{fig:profile}). Blind rotation takes \BRShare\% of the
+gate time and key switching the rest. The FFTs alone, forward and backward,
+take \FftShare\% of the gate, and the value-by-value products another
+\MacShare\%, so the work in the frequency domain is \FreqShare\% of the time.
+The gadget decomposition, which with the offset trick is only a few integer
+operations per coefficient, takes only \DecShare\%.
+
+The measurements also showed a cost that does not appear in the description of
+the algorithm: \emph{memory traffic}. Blind rotation reads a different TRGSW
+ciphertext at each step, so every gate reads the whole \BkMB\,MiB bootstrapping
+key, which is much larger than the processor caches. One external product takes
+\ExtHot\,\textmu s when it reuses the same key ciphertext (which then stays in
+the cache), but \ExtKey\,\textmu s when consecutive calls go through the key as
+in the blind rotation. A single value-by-value product is $\MacRatio\times$
+slower when its TRGSW row comes from main memory (\MacKey\,\textmu s instead of
+\MacHot\,\textmu s), so Figure~\ref{fig:profile} counts the products with the
+slower time. Over the $n$ steps, this difference is about \MemShare\% of the
+gate time. The remaining \OtherShare\% (``other'') is the part that no single
+operation explains: the temporary vectors created in every external product
+(about \ExtAlloc\,\textmu s per call, measured as the difference between a full
+external product that stays in the cache and the sum of its parts) and other
+waits for memory. These results agree with the comparison above: the
+$\SlowdownSpq\times$ difference to the original library comes from the work in
+the frequency domain and from how it accesses memory, which the original
+library implements in optimized assembly.
+
+\input{figures/fig_profile.tex}
+
+\subsection{Memory}
+
+Most of the memory goes to the two parts of the evaluation key. The
+bootstrapping key takes \BkMB\,MiB ($n\cdot2\ell\cdot2\cdot\frac N2$ complex numbers
+of 16 bytes) and the key-switching key takes \KskMB\,MiB ($N\cdot t\cdot\Bks$
+ciphertexts of $n+1$ torus elements of 4 bytes). An encrypted bit, on the other
+hand, takes only $(n+1)\cdot4=2524$ bytes, which is still about $20{,}000$ times
+more than the bit itself. The peak memory of our benchmark program is
+\OurRSS\,MiB, less than the \SpqRSS\,MiB of the original library, which also
+keeps the bootstrapping key as coefficients.
+
+\subsection{Noise}
+\label{sec:noise}
+
+\paragraph{Bootstrapping resets the noise.}
+First, a direct check of the property explained in Section~\ref{sec:bsnoise}.
+We encrypted $+\frac18$ with a very large noise, more than $300$ times the noise
+of a normal ciphertext, and bootstrapped each ciphertext once.
+Figure~\ref{fig:noisereset} shows the result: after the bootstrapping, the
+noise is the same as for any other input.
+
+\input{figures/fig_noisereset.tex}
+
+\paragraph{Bounds and average case.}
+The bounds of Eqs.~\eqref{eq:varbr} and~\eqref{eq:varks} are worst cases: they
+assume that every digit has the largest possible size $\beta$ and that every
+key-switching digit is nonzero. We get a better prediction by noting that the
+digits are close to uniformly distributed. A uniform digit in $[-\beta,\beta)$
+has $\mathbb{E}[d^2]\approx\beta^2/3$, so the average variance of the blind
+rotation is $n\cdot2\ell N(\beta^2/3)\vartheta_{\BK}\approx\AvgBR$, a third of the
+bound.
+
+Key switching needs more care, because the table is created only once. For a
+fixed key, each entry has a \emph{fixed} noise value. Let $X$ be the noise
+added at position $(i,j)$, which is $e_{i,j,v}$ for a digit $v$ uniform in
+$\{0,\dots,\Bks-1\}$, with $e_{i,j,0}=0$. Taking the average over the inputs
+with the table fixed, and then over the random table, gives
+\begin{equation}
+  \mathbb{E}\big[\mathrm{Var}(X\mid\KSK)\big]
+    =\Big(\frac{\Bks-1}{\Bks}\Big)^{2}\vartheta_{\KSK},
+  \qquad
+  \mathrm{Var}\big(\mathbb{E}[X\mid\KSK]\big)
+    =\frac{\Bks-1}{\Bks^{2}}\,\vartheta_{\KSK}.
+  \label{eq:ksbias}
+\end{equation}
+Adding the first term over the $tN$ positions predicts a variance of \AvgKS{}
+for key switching within one key, so the total variance of a gate output, for
+a fixed key, should be about \AvgTotal. The second term predicts that the
+average error for a given key is not zero: each key has its own small
+\emph{bias}, with standard deviation
+$\sqrt{3tN/16}\,\sigma_{\mathrm{LWE}}\approx\BiasStd$ across keys.
+
+\paragraph{Measurements.}
+To test these predictions, we created \NoiseKeys{} independent keys and
+bootstrapped \NoiseGates{} random NAND inputs with each of them
+(Table~\ref{tab:noise} and Figure~\ref{fig:noise}). The measured variances are
+far below the worst-case bounds and within a few percent of the average-case
+predictions, both after blind rotation and after key switching. The standard
+deviation of the average error of each key, \NoiseBiasStd, agrees with the
+predicted \BiasStd{} (with only ten keys, this estimate has an uncertainty of
+about $25\%$). The bias is harmless, since it is about a hundred times smaller
+than the margin, but it explains why the average error of the original library
+is smaller (Table~\ref{tab:perf}): when it creates the key-switching table, the
+library draws all the noise values first and subtracts their average, which
+removes most of the bias.
+
+\begin{table}[!htb]
+\centering
+\caption{Variance of the output error of the gate bootstrapping: worst-case
+bound, average-case prediction and measurement (\NoiseKeys{} keys $\times$
+\NoiseGates{} gates; variance within each key, averaged over the keys).}
+\label{tab:noise}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & Bound & Average case & Measured\\
+\midrule
+After blind rotation and extraction & \BoundBR & \AvgBR & \NoiseVarBR\\
+After key switching (within a key) & \BoundTotal & \AvgTotal & \NoiseVarKS\\
+Average error of a key, std.\ deviation & --- & \BiasStd & \NoiseBiasStd\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{figures/fig_noise.tex}
+
+%% ===========================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We implemented TFHE gate bootstrapping from scratch, in about \LibLines{} lines
+of C++ without external libraries, and tested it layer by layer. With the
+parameters of the original library, a gate takes \OurNandMean\,ms on one core.
+This is $\SlowdownSpq$ times slower than the original library with its
+assembly FFT and $\SpeedupNay$ times faster than its portable version, and our
+implementation uses less memory. We saw no decryption error in \TotalGates{}
+gates.
+
+Building the scheme step by step made the role of each part clear. The
+external product keeps the noise growth additive, which allows hundreds of
+operations in one bootstrapping. The offset trick makes the signed
+decomposition almost free. Most of the time is spent in the FFT and in reading
+the bootstrapping key from memory, since the key is much larger than the
+processor caches. Our noise measurements agree with an average-case analysis,
+which also explained a small key-dependent bias in our key switching that the
+original library removes by centering its noise.
+
+There are several ways to continue this work, roughly from the easiest to the
+hardest: centering the key-switching noise as the original library does;
+removing the temporary vectors from the inner loops; storing the bootstrapping
+key in one contiguous block and loading the next TRGSW ciphertext in advance;
+using AVX2/FMA instructions in the FFT; running independent gates in parallel
+threads; and using other test polynomials to compute more general functions
+\cite{chillotti2021pbs}.
+
+\bibliographystyle{sbc}
+\bibliography{refs}
+
+\end{document}

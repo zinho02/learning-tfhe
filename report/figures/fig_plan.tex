@@ -1,0 +1,14 @@
+% The plan of TFHE's bootstrapping.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/plan.tex}
+\caption{The idea of TFHE's bootstrapping, a table lookup by rotation, drawn
+with $N=8$. \ding{172} The encrypted phase is rounded to one of $2N=16$
+positions. \ding{173} The table of answers, stored as the coefficients of a
+polynomial $v$, is rotated by that position, which brings the right answer to
+the front (the entries that wrap around come back with a minus sign).
+\ding{174} The first entry is read. The hard part is step \ding{173}: the
+rotation depends on the secret key, so the server must rotate without knowing
+by how much.}
+\label{fig:plan}
+\end{figure}

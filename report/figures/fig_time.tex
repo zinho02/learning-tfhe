@@ -1,0 +1,47 @@
+% Time per NAND gate and key generation time: this work vs. the reference library.
+\begin{figure}[!htb]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+    group style={group size=2 by 1, horizontal sep=1.9cm},
+    width=0.47\textwidth, height=5.4cm,
+    ymin=0,
+    xtick={0,1,2}, xticklabels={{this work},{spqlios-fma},{nayuki-portable}},
+    xticklabel style={font=\footnotesize, align=center, text width=1.9cm},
+    enlarge x limits=0.25,
+    ymajorgrids, grid style={cGray!20},
+    tick label style={font=\footnotesize}, label style={font=\small},
+    title style={font=\small},
+    nodes near coords, nodes near coords style={font=\scriptsize, anchor=south,
+      yshift=1pt},
+  ]
+  \nextgroupplot[ybar, bar width=0.62cm, ylabel={time per NAND gate (ms)}, ymax=140,
+                 title={(a) gate evaluation},
+                 point meta=explicit symbolic]
+  \addplot[fill=cBlue!70, draw=cBlue!90!black,
+           nodes near coords={\pgfmathprintnumber[fixed,zerofill,precision=1]{\pgfplotspointmeta}}]
+    table[x=x, y=nand, meta=nand,
+          restrict expr to domain={\coordindex}{0:0}] {data/time.dat};
+  \addplot[fill=cGray!45, draw=cGray!90!black,
+           nodes near coords={\pgfmathprintnumber[fixed,zerofill,precision=1]{\pgfplotspointmeta}}]
+    table[x=x, y=nand, meta=nand,
+          restrict expr to domain={\coordindex}{1:2}] {data/time.dat};
+  \nextgroupplot[ybar, bar width=0.62cm, ylabel={key generation (s)}, ymax=1.15,
+                 title={(b) evaluation-key generation},
+                 point meta=explicit symbolic]
+  \addplot[fill=cBlue!70, draw=cBlue!90!black,
+           nodes near coords={\pgfmathprintnumber[fixed,zerofill,precision=2]{\pgfplotspointmeta}}]
+    table[x=x, y=keygen, meta=keygen,
+          restrict expr to domain={\coordindex}{0:0}] {data/time.dat};
+  \addplot[fill=cGray!45, draw=cGray!90!black,
+           nodes near coords={\pgfmathprintnumber[fixed,zerofill,precision=2]{\pgfplotspointmeta}}]
+    table[x=x, y=keygen, meta=keygen,
+          restrict expr to domain={\coordindex}{1:2}] {data/time.dat};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Time per gate and key generation time, on one thread, with the same
+parameters and on the same machine (average over the runs; the ranges are in
+Table~\ref{tab:perf}). The original library is shown with its two FFT
+versions; the rest of its code is the same in both.}
+\label{fig:time}
+\end{figure}

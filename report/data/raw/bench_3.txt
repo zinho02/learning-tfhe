@@ -1,0 +1,8 @@
+secret key: 0.01 ms evaluation key: 217.68 ms
+bootstrapping key: 59.1 MB key-switching key: 78.9 MB
+ciphertext of one bit: 2524 bytes
+NAND: 22.82 ms per gate (average of 500)
+ blind rotation + extraction: 21.86 ms key switching: 0.75 ms
+error after blind rotation: mean +1.34e-04 variance 4.39e-06 (bound 1.41e-05)
+error after key switching: mean -5.58e-04 variance 8.57e-06 (bound 2.18e-05)
+decryption errors: 0 out of 500 gates

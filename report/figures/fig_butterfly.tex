@@ -1,0 +1,11 @@
+% Radix-2 FFT of size 4.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/butterfly.tex}
+\caption{A DFT of size $4$ computed by the FFT. The inputs are first put in
+bit-reversed order ($z_0,z_2,z_1,z_3$). Each round combines pairs of values
+with a \emph{butterfly}, $(u,v)\mapsto(u+w\,v,\;u-w\,v)$, where $w$ is a root of
+unity ($1$, or $i$ for the last pair). A transform of size $M$ needs $\log_2M$
+rounds of $M/2$ butterflies.}
+\label{fig:butterfly}
+\end{figure}

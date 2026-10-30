@@ -1,0 +1,46 @@
+% Blind rotation step by step, for n = 3 and N = 4. Shared by the report and
+% the slides (each step appears on its own overlay in the slides).
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  \def\cw{0.82}
+  \def\ch{0.46}
+  \def\dy{1.05}
+  % one accumulator: \acc{row}{sign/index list}{overlay}; b = +v_index, o = -v_index
+  \def\acc#1#2#3{%
+    \begin{scope}[shift={(0,-#1*\dy)}, visible on=#3]
+      \foreach \s/\c [count=\j from 0] in {#2} {
+        \if\s b
+          \node[draw=cNavy!35, fill=cBlue!14, minimum width=\cw cm, minimum height=\ch cm,
+                inner sep=0pt] at (\j*\cw,0) {$v_{\c}$};
+        \else
+          \node[draw=cNavy!35, fill=cOrange!16, minimum width=\cw cm, minimum height=\ch cm,
+                inner sep=0pt] at (\j*\cw,0) {$-v_{\c}$};
+        \fi
+      }
+      \draw[cGreen!70!black, line width=1.2pt] (-0.5*\cw,-0.5*\ch) rectangle (0.5*\cw,0.5*\ch);
+    \end{scope}}
+  \acc{0}{o/2, o/3, b/0, b/1}{<1->}
+  \acc{1}{b/3, o/0, o/1, o/2}{<2->}
+  \acc{2}{b/3, o/0, o/1, o/2}{<3->}
+  \acc{3}{b/1, b/2, b/3, o/0}{<4->}
+  % left labels
+  \begin{scope}[every node/.style={anchor=east, font=\footnotesize}]
+    \node at (-0.65,0) {start: $X^{-\bar b}v=X^{-6}v$};
+    \node[visible on=<2->] at (-0.65,-1*\dy) {$X^{-3}v$};
+    \node[visible on=<3->] at (-0.65,-2*\dy) {$X^{-3}v$};
+    \node[visible on=<4->] at (-0.65,-3*\dy) {$X^{-1}v$};
+  \end{scope}
+  % steps
+  \begin{scope}[every node/.style={anchor=west, font=\footnotesize, align=left}]
+    \draw[->, cNavy!70, line width=0.8pt, visible on=<2->] (1.5*\cw,-0.32) -- (1.5*\cw,-1*\dy+0.32);
+    \node[visible on=<2->] at (3.75*\cw,-0.5*\dy)
+      {$\BK_1$: $\bar a_1=3$, ${\color{cOrange!90!black}s_1=1}$ $\Rightarrow\times X^{3}$};
+    \draw[->, cNavy!70, line width=0.8pt, visible on=<3->] (1.5*\cw,-1*\dy-0.32) -- (1.5*\cw,-2*\dy+0.32);
+    \node[visible on=<3->] at (3.75*\cw,-1.5*\dy)
+      {$\BK_2$: $\bar a_2=5$, ${\color{cBlue!90!black}s_2=0}$ $\Rightarrow$ unchanged};
+    \draw[->, cNavy!70, line width=0.8pt, visible on=<4->] (1.5*\cw,-2*\dy-0.32) -- (1.5*\cw,-3*\dy+0.32);
+    \node[visible on=<4->] at (3.75*\cw,-2.5*\dy)
+      {$\BK_3$: $\bar a_3=2$, ${\color{cOrange!90!black}s_3=1}$ $\Rightarrow\times X^{2}$};
+  \end{scope}
+  \node[visible on=<5->, anchor=west, font=\footnotesize] at (3.75*\cw,-3*\dy)
+    {output ${\color{cGreen!70!black}v_1}$, \ as $\bar\varphi=6-3-2=1$};
+\end{tikzpicture}

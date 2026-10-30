@@ -1,0 +1,16 @@
+% The test polynomial as a lookup table, for N = 4.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/staircase.tex}
+\caption{The test polynomial as a lookup table, drawn for $N=4$. (a) The
+rounded phase $\bar\varphi=\round{2N\varphi}$ is one of $2N=8$ positions on the
+torus; positions $0$ to $N-1$ are the upper half and $N$ to $2N-1$ the lower
+half. (b) The coefficients of $X^{-\bar\varphi}\cdot v$ for every $\bar\varphi$:
+each row is the row above shifted to the left, and the coefficient that leaves
+on the left comes back on the right with its sign changed, because $X^N=-1$.
+The constant coefficient (framed) is $v_{\bar\varphi}$ in the upper half and
+$-v_{\bar\varphi-N}$ in the lower half. With every $v_j=\mu$, the output is $+\mu$
+or $-\mu$ depending on the half of the circle where the phase is: the sign
+function used by every gate.}
+\label{fig:testpoly}
+\end{figure}

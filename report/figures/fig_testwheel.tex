@@ -1,0 +1,16 @@
+% What the coefficients of the test polynomial mean.
+\begin{figure}[!htb]
+\centering
+\input{figures/tikz/testwheel.tex}
+\caption{What the coefficients $v_j$ of the test polynomial mean, for $N=4$.
+The circle is cut into $2N=8$ slices, numbered by the rounded phase
+$\bar\varphi$ (outside), and each slice shows the value that the bootstrapping
+returns when the phase of its input is in that slice. Coefficient $v_j$ is the
+output for slice $j$ of the upper half (blue); the opposite slice $N+j$, in the
+lower half (orange), always returns $-v_j$, because $X^N=-1$. (a) The general
+rule. (b) The gate test polynomial: every $v_j$ is $\frac18$, so the output is
+$+\frac18$ on the upper half and $-\frac18$ on the lower half. (c) A table that
+is not constant, $v_j=j/8$: on the upper half the bootstrapping returns the
+rounded phase itself.}
+\label{fig:testwheel}
+\end{figure}

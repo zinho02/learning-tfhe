@@ -1,0 +1,35 @@
+% CMux: (a) the encrypted multiplexer; (b) the example d0 = 1/8, d1 = 5/8.
+% Shared by the report and the slides.
+\begin{tikzpicture}[font=\footnotesize, >=Stealth]
+  % ---------------- (a) ----------------
+  \draw[line width=0.8pt, fill=cBlue!10] (0,-1.15) -- (0,1.15) -- (1.4,0.62) -- (1.4,-0.62) -- cycle;
+  \node[font=\small\bfseries] at (0.66,0) {CMux};
+  \node[font=\scriptsize, cGray] at (0.2,0.7) {1};
+  \node[font=\scriptsize, cGray] at (0.2,-0.7) {0};
+  \draw[->, line width=0.8pt] (-1.2,0.7) node[left] {$d_1$} -- (0,0.7);
+  \draw[->, line width=0.8pt] (-1.2,-0.7) node[left] {$d_0$} -- (0,-0.7);
+  \draw[->, line width=0.8pt, cOrange] (0.7,1.85) node[above] {$C=\mathrm{TRGSW}(m)$} -- (0.7,0.9);
+  \draw[->, line width=0.8pt] (1.4,0) -- (2.3,0);
+  \node[anchor=west, align=left] at (2.35,0) {$d_0+C\ext(d_1-d_0)$};
+  \node[anchor=north west, align=left, cGray!90!black, font=\scriptsize] at (2.35,-0.3)
+    {message $\mu_0+m(\mu_1-\mu_0)$:\\$\mu_1$ if $m=1$, \ $\mu_0$ if $m=0$};
+  \node at (-1.9,1.9) {(a)};
+  % ---------------- (b) ----------------
+  \begin{scope}[xshift=9.0cm]
+    \def\rad{1.45}
+    \draw[line width=0.9pt] (0,0) circle (\rad);
+    \foreach \k in {0,...,7} \draw[cGray] (\k*45:\rad-0.07) -- (\k*45:\rad+0.07);
+    \draw[->, cOrange, line width=1.1pt, visible on=<3->] (52:\rad-0.25) arc (52:218:\rad-0.25);
+    \fill[cBlue] (45:\rad) circle (2.6pt);
+    \fill[cOrange] (225:\rad) circle (2.6pt);
+    \node[cBlue!85!black, anchor=south west] at (45:\rad) {$d_0$: $\frac18$};
+    \node[cOrange!85!black, anchor=north east] at (225:\rad) {$d_1$: $\frac58$};
+    \node[cOrange!85!black, align=center, visible on=<3->] at (135:0.55)
+      {$m=1$\\$+\frac12$};
+    \node[cBlue!85!black, anchor=west, align=left, visible on=<2->] at (5:\rad+0.2)
+      {$m=0$: $+0$,\\stays at $\frac18$};
+    \node[cGray!90!black, align=center, font=\scriptsize] at (0,-\rad-0.55)
+      {$d_1-d_0$ encrypts $\frac12$};
+    \node at (-\rad-1.0,1.9) {(b)};
+  \end{scope}
+\end{tikzpicture}
