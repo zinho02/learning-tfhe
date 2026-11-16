@@ -91,8 +91,7 @@ any depth can be evaluated. In this project we implemented TFHE gate
 bootstrapping from scratch in C++, using the same 128-bit parameters as the
 original TFHE library. This report explains the scheme step by step, from LWE
 encryption to a working encrypted adder, describes the main implementation
-choices (the negacyclic FFT and a trick that computes signed digits with a
-single addition), and compares our code with the original library. A NAND gate
+choices, such as the negacyclic FFT, and compares our code with the original library. A NAND gate
 takes \OurNandMean\,ms in our implementation, which is $\SlowdownSpq\times$
 slower than the original library with its assembly FFT and $\SpeedupNay\times$
 faster than its portable version. We saw no decryption errors in \TotalGates{}
@@ -108,9 +107,8 @@ limpa o ruído do resultado, e assim circuitos de qualquer profundidade podem
 ser avaliados. Neste projeto implementamos o \emph{gate bootstrapping} do TFHE
 do zero em C++, com os mesmos parâmetros de 128 bits da biblioteca original.
 Este relatório explica o esquema passo a passo, da cifra LWE até um somador
-cifrado funcionando, descreve as principais escolhas de implementação (a FFT
-negacíclica e um truque que calcula dígitos com sinal com uma única soma) e
-compara o nosso código com a biblioteca original. Uma porta NAND leva
+cifrado funcionando, descreve as principais escolhas de implementação, como a FFT
+negacíclica, e compara o nosso código com a biblioteca original. Uma porta NAND leva
 \OurNandMean\,ms na nossa implementação, $\SlowdownSpq$ vezes mais que a
 biblioteca original com a FFT em assembly e $\SpeedupNay$ vezes menos que a sua
 versão portável. Não observamos nenhum erro de decifração em \TotalGates{}
@@ -442,8 +440,7 @@ $[-5,5)$ and $\varepsilon=0.005$. For $t=0.7316$, the usual digits are $7$ and
 $3$, but $7$ is too large. Since $0.73=1-0.27$, on the torus $0.73$ is the same
 point as $-0.27$, so the signed digits are $d_1=-3$ and $d_2=3$. Indeed,
 $-\frac3{10}+\frac3{100}=-0.27\equiv0.73$, which is at distance
-$0.0016\le\varepsilon$ from $t$. Section~\ref{sec:offset} shows how to compute
-such digits quickly.
+$0.0016\le\varepsilon$ from $t$.
 \end{example}
 
 \paragraph{Step 2: the encryptions that the server needs (TRGSW).}
@@ -1303,134 +1300,6 @@ when the \code{NegFFT} object is created.
 
 \input{figures/fig_butterfly.tex}
 
-\paragraph{Is double precision enough?}
-The FFT computes with \code{double} numbers, which have 53 bits of precision,
-but the result must be exact as a 32-bit integer. In every product of the
-scheme, one factor has small coefficients (digits with $|d|\le64$, or key bits)
-and the other has torus coefficients, read as signed integers with
-$|t|\le2^{31}$. Each coefficient of the product is a sum of $N=2^{10}$ such
-terms, so its absolute value is at most $2^6\cdot2^{31}\cdot2^{10}=2^{47}$, which
-is less than $2^{53}$. Rounding the result to the nearest integer therefore
-gives the exact value. Our unit test confirms this: the FFT products were
-identical, bit by bit, to the direct ones, and $\FftSpeedup\times$ faster
-($\FftNaive$\,\textmu s against $\FftFast$\,\textmu s for $N=1024$).
-
-\paragraph{A detail about complex numbers.}
-The product of two \code{std::complex<double>} follows the C99 rules for
-infinities and NaN values, which makes the compiler unable to vectorize it and
-slows down the FFT loop. We use a hand-written function \code{cmul} with the
-usual formula $(x+iy)(u+iv)=(xu-yv)+i(xv+yu)$.
-
-\subsection{Signed Digits with One Addition: the Offset Trick}
-\label{sec:offset}
-
-\paragraph{The problem.}
-Every external product decomposes $2N=2048$ coefficients into $2N\ell=6144$
-digits, so the gadget decomposition must be fast. Ordinary digits in $[0,\Bg)$
-would be easy: they are just groups of bits of $t$. But we want signed digits
-in $[-\Bg/2,\Bg/2)$, because they are half as large ($\beta=\Bg/2$ instead of
-$\Bg$), and the main noise term of Proposition~\ref{prop:extprod} grows with
-$\beta^2$, so signed digits give four times less noise.
-
-\paragraph{The slow way.}
-To get signed digits from ordinary ones, we can work from the last digit to the
-first, like in a manual subtraction: every digit that is $\Bg/2$ or larger
-becomes negative by subtracting $\Bg$, and we add $1$ to the digit on its left.
-Before that, we also have to round, using the part of $t$ that is thrown away.
-Take base $10$ with two digits (digits in $[-5,5)$) and $t=0.9551$. Rounding to
-two digits gives $0.96$, because the discarded part, $51$, is at least half.
-The digits are $9$ and $6$. The last digit, $6$, is too large, so it becomes
-$6-10=-4$ and the $9$ becomes $10$. Now $10$ is too large, so it becomes $0$ and
-gives a $1$ to the left, which is a full turn of the circle and can be ignored.
-The result is $(0,-4)$: indeed $0-0.04=-0.04\equiv0.96$. This works, but it needs
-a loop with tests and carries, for each of the $6144$ digits.
-
-\paragraph{The trick.}
-The same result can be obtained with one addition. Add to $t$ a constant, the
-\emph{offset}, that has $\Bg/2$ in every digit position plus half of the
-position after the last digit; read the ordinary digits of the sum; and
-subtract $\Bg/2$ from each of them. In base $10$ with two digits, the offset is
-$0.555$. Table~\ref{tab:offset10} applies the trick to three values.
-
-\begin{table}[!htb]
-\centering
-\caption{The offset trick in base $10$ with two digits: add $0.555$, keep the
-part after the decimal point, take the two digits and subtract $5$ from each.}
-\label{tab:offset10}
-\small
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-$t$ & $t+0.555$ & digits & minus $5$ & value & error\\
-\midrule
-$0.7316$ & $1.2866\to0.2866$ & $2,\ 8$ & $-3,\ 3$ & $-0.27\equiv0.73$ & $0.0016$\\
-$0.7366$ & $1.2916\to0.2916$ & $2,\ 9$ & $-3,\ 4$ & $-0.26\equiv0.74$ & $0.0034$\\
-$0.9551$ & $1.5101\to0.5101$ & $5,\ 1$ & $0,\ -4$ & $-0.04\equiv0.96$ & $0.0049$\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The first row is Example~\ref{ex:decimal}. The second row shows the rounding:
-the discarded part of $0.7366$ is $66$, so the value is rounded up to $0.74$.
-The third row is the value we decomposed the slow way, and it gives the same
-digits $(0,-4)$, including the chain of two carries. In every row the error is
-at most $\varepsilon=0.005$.
-
-\paragraph{Why it works.}
-Adding $5$ to every digit and later subtracting $5$ from every digit does not
-change the value. What changes is that the addition causes a carry exactly
-when a digit was $5$ or more, and that is exactly when the slow way had to make
-the digit negative and add $1$ to its left neighbor. The extra half digit at
-the end does the rounding in the same way: it causes a carry into the last
-digit exactly when the discarded part is at least half. The following lemma
-states this for our binary case, where a digit is a group of
-$\beta_{\mathrm{bit}}$ bits.
-
-\begin{lemma}[Offset trick]
-\label{lem:offset}
-Let $q=2^{32}$, $\Bg=2^{\beta_{\mathrm{bit}}}$ with $\ell\beta_{\mathrm{bit}}<32$,
-let $h_i=2^{32-i\beta_{\mathrm{bit}}}$ (the integer that stands for $\Bg^{-i}$),
-and
-\[
-  \mathit{offset}=\sum_{i=1}^{\ell}\frac{\Bg}{2}\,h_i+\frac{h_\ell}{2}.
-\]
-For $t\in\Z_q$, let $t'=t+\mathit{offset}\bmod q$, let $u_i\in[0,\Bg)$ be the
-$i$-th group of $\beta_{\mathrm{bit}}$ bits of $t'$ from the top, i.e.,
-$u_i=\lfloor t'/h_i\rfloor\bmod\Bg$, and let $d_i=u_i-\Bg/2$. Then
-$d_i\in[-\Bg/2,\Bg/2)$ and $\big|t-\sum_id_ih_i \bmod q\big|\le h_\ell/2$, so the
-digits $(d_i)$ satisfy Eq.~\eqref{eq:gadget}.
-\end{lemma}
-
-\begin{proof}
-We can write $t'=\sum_{i=1}^{\ell}u_ih_i+r$ with $0\le r<h_\ell$. Then, modulo $q$,
-$t=t'-\mathit{offset}=\sum_i(u_i-\Bg/2)\,h_i+(r-h_\ell/2)=\sum_id_ih_i+(r-h_\ell/2)$,
-and $|r-h_\ell/2|\le h_\ell/2$, which is $\varepsilon=1/(2\Bg^\ell)$ in torus
-units. The range of $d_i$ follows from $u_i\in[0,\Bg)$.
-\end{proof}
-
-\paragraph{In binary.}
-With $\Bg=2^7$ and $\ell=3$, a digit is a group of $7$ bits, and the offset has
-$64$ in each of the three groups and $2^{10}$ in the discarded part.
-Figure~\ref{fig:gadget} shows the computation for $t=0.7$: one 32-bit addition,
-then each digit is obtained with a shift, a mask and a subtraction. The code
-below is the complete decomposition of one coefficient; the offset is computed
-only once.
-
-\input{figures/fig_gadget.tex}
-
-\begin{lstlisting}
-uint32_t t = p[j] + g.offset;             // one addition: all carries
-for (int i = 0; i < g.ell; ++i) {
-    uint32_t digit = (t >> (32 - (i + 1) * g.Bgbit)) & g.mask; // [0,Bg)
-    out[i][j] = int32_t(digit) - int32_t(g.halfBg);     // [-Bg/2,Bg/2)
-}
-\end{lstlisting}
-
-The same idea of ``adding half before cutting'' is used in three other places:
-to decode messages, in modulus switching (where $2^{31}$ is added to $2N\cdot t$,
-computed in 64 bits, before dropping the 32 low bits), and in key switching,
-where a half digit is added to each $a_i$ so that its $t$ digits are rounded
-instead of truncated.
-
 \subsection{External Product in the Frequency Domain}
 
 The same rows of the bootstrapping key are used in every gate, so we store
@@ -1543,27 +1412,7 @@ in one gate (Figure~\ref{fig:profile}). Blind rotation takes \BRShare\% of the
 gate time and key switching the rest. The FFTs alone, forward and backward,
 take \FftShare\% of the gate, and the value-by-value products another
 \MacShare\%, so the work in the frequency domain is \FreqShare\% of the time.
-The gadget decomposition, which with the offset trick is only a few integer
-operations per coefficient, takes only \DecShare\%.
-
-The measurements also showed a cost that does not appear in the description of
-the algorithm: \emph{memory traffic}. Blind rotation reads a different TRGSW
-ciphertext at each step, so every gate reads the whole \BkMB\,MiB bootstrapping
-key, which is much larger than the processor caches. One external product takes
-\ExtHot\,\textmu s when it reuses the same key ciphertext (which then stays in
-the cache), but \ExtKey\,\textmu s when consecutive calls go through the key as
-in the blind rotation. A single value-by-value product is $\MacRatio\times$
-slower when its TRGSW row comes from main memory (\MacKey\,\textmu s instead of
-\MacHot\,\textmu s), so Figure~\ref{fig:profile} counts the products with the
-slower time. Over the $n$ steps, this difference is about \MemShare\% of the
-gate time. The remaining \OtherShare\% (``other'') is the part that no single
-operation explains: the temporary vectors created in every external product
-(about \ExtAlloc\,\textmu s per call, measured as the difference between a full
-external product that stays in the cache and the sum of its parts) and other
-waits for memory. These results agree with the comparison above: the
-$\SlowdownSpq\times$ difference to the original library comes from the work in
-the frequency domain and from how it accesses memory, which the original
-library implements in optimized assembly.
+The gadget decomposition takes only \DecShare\%.
 
 \input{figures/fig_profile.tex}
 
@@ -1667,20 +1516,9 @@ gates.
 
 Building the scheme step by step made the role of each part clear. The
 external product keeps the noise growth additive, which allows hundreds of
-operations in one bootstrapping. The offset trick makes the signed
-decomposition almost free. Most of the time is spent in the FFT and in reading
-the bootstrapping key from memory, since the key is much larger than the
-processor caches. Our noise measurements agree with an average-case analysis,
+operations in one bootstrapping. Most of the time is spent in the FFT. Our noise measurements agree with an average-case analysis,
 which also explained a small key-dependent bias in our key switching that the
 original library removes by centering its noise.
-
-There are several ways to continue this work, roughly from the easiest to the
-hardest: centering the key-switching noise as the original library does;
-removing the temporary vectors from the inner loops; storing the bootstrapping
-key in one contiguous block and loading the next TRGSW ciphertext in advance;
-using AVX2/FMA instructions in the FFT; running independent gates in parallel
-threads; and using other test polynomials to compute more general functions
-\cite{chillotti2021pbs}.
 
 \bibliographystyle{sbc}
 \bibliography{refs}

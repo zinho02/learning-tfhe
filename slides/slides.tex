@@ -204,12 +204,6 @@
         (128-bit set: $n=630$, $N=1024$).
   \item Compare with the original on four criteria.
 \end{itemize}
-\vspace{6pt}
-\textbf{Result}
-\begin{itemize}
-  \item Header-only C++17, no dependencies, \LibLines{} lines of code.
-  \item 10 unit tests, one per layer; an encrypted $n$-bit adder.
-\end{itemize}
 \column{0.46\textwidth}
 \centering
 \begin{tikzpicture}[font=\small,
@@ -225,10 +219,6 @@
 \begin{frame}{Roadmap: each concept solves a problem raised by the previous one}
 \centering
 \scalebox{0.93}{\input{../report/figures/tikz/roadmap.tex}}
-
-\vspace{8pt}
-\small then: \textbf{implementation} (FFT, offset trick, frequency-domain keys)
-\ $\to$ \ \textbf{evaluation} (correctness, time, memory, noise)
 \end{frame}
 
 %% ===========================================================================
@@ -511,11 +501,6 @@ row $i$ has phase $e_i-m\,s'/\Bg^{i}$, \ row $\ell+i$ has phase $e_{\ell+i}+m/\B
   \item<2-> $d_1-d_0$ encrypts $\frac12$; \ $C\ext(d_1-d_0)$ encrypts $m\cdot\frac12$.
 \end{itemize}
 \column{0.46\textwidth}
-\onslide<4->{
-\begin{exampleblock}{Exactly the step the plan needs}
-\small $d_1=X^{k_i}\mathrm{ACC}$, \ $d_0=\mathrm{ACC}$, \ $C=\mathrm{TRGSW}(s_i)$\\
-\muted{(\texttt{test07} checks every key bit this way)}
-\end{exampleblock}}
 \end{columns}
 \end{frame}
 
@@ -532,10 +517,10 @@ row $i$ has phase $e_i-m\,s'/\Bg^{i}$, \ row $\ell+i$ has phase $e_{\ell+i}+m/\B
                  text width=3.6cm, align=center, font=\footnotesize, inner sep=4pt},
     flow/.style={->, line width=1pt, cNavy!80}]
   \node[stage, fill=cGray!6, text width=0.9cm] (in) at (0,0) {$c_1,c_2$};
-  \node[stage, hl on=<2>] (lin) at (2.5,0) {linear\\combination};
-  \node[stage, hl on=<3>] (br)  at (5.4,0) {blind\\rotation};
-  \node[stage, hl on=<4>] (se)  at (8.3,0) {sample\\extraction};
-  \node[stage, hl on=<5>] (ks)  at (11.2,0){key\\switching};
+  \node[stage] (lin) at (2.5,0) {linear\\combination};
+  \node[stage] (br)  at (5.4,0) {blind\\rotation};
+  \node[stage] (se)  at (8.3,0) {sample\\extraction};
+  \node[stage] (ks)  at (11.2,0){key\\switching};
   \node[stage, fill=cGray!6, text width=0.6cm] (out) at (13.4,0) {$c$};
   \draw[flow] (in) -- node[lbl, above] {LWE} node[lbl, below] {$s,n$} (lin);
   \draw[flow] (lin) -- node[lbl, above] {LWE} node[lbl, below] {$s,n$} (br);
@@ -546,11 +531,6 @@ row $i$ has phase $e_i-m\,s'/\Bg^{i}$, \ row $\ell+i$ has phase $e_{\ell+i}+m/\B
   \node[kbox, below=1.0cm of ks] (ksk) {\textbf{key-switching key}\\$\mathrm{LWE}_s(v\,s'_i/4^{j})$};
   \draw[->, densely dashed, cGray] (bk) -- (br);
   \draw[->, densely dashed, cGray] (ksk) -- (ks);
-  \node[font=\small, align=left, anchor=north west, text width=13.4cm] at (0,-3.1) {%
-    \only<2>{Combine the inputs so that the phase is positive $\iff$ the output is \textsf{true}. Cheap, but noises add up.}%
-    \only<3>{Rotate a test polynomial by the \emph{encrypted} phase: the gate is evaluated and the noise is \alert{fresh}. $>95\%$ of the time.}%
-    \only<4>{Read the constant coefficient of the TRLWE as an LWE sample under $s'$. Free, no noise.}%
-    \only<5>{Bring the result back to key $s$ and dimension $n$, ready for the next gate.}};
 \end{tikzpicture}
 \end{frame}
 
@@ -610,34 +590,7 @@ Fresh noise: depends on $\BK$ only.
 
 \vspace{4pt}
 \small Rotating by $X^{-\bar\varphi}$ brings entry $v_{\bar\varphi}$ to the front: each row is
-the previous one shifted left, and the coefficient that leaves \alert{comes back negated} ($X^N=-1$). \onslide<3->{\muted{Other $v$ $\Rightarrow$ other functions
-(programmable bootstrapping; \texttt{test08} evaluates a 4-entry table).}}
-\end{frame}
-
-%% ===========================================================================
-\begin{frame}{How the test polynomial is built, and is it encrypted?}
-\begin{columns}[T,onlytextwidth]
-\column{0.5\textwidth}
-\textbf{Built by the server}, from the function:\\
-coefficient $j$ $=$ answer for slice $\bar\varphi=j$.
-\begin{itemize}
-  \item Gates: all $N=1024$ coefficients $=\mu=\frac18$ \muted{(\texttt{0x20000000})}:\\
-        \texttt{\footnotesize TorusPoly testv(N, MU);}
-\end{itemize}
-\column{0.47\textwidth}
-\onslide<2->{
-\begin{alertblock}{Not encrypted: it is public}
-The function is no secret (``compute a NAND''). What is secret is the input,
-i.e., \emph{which} entry gets selected.
-\end{alertblock}}
-\end{columns}
-\vspace{6pt}
-\centering
-\onslide<2->{\scalebox{0.88}{\input{../report/figures/tikz/trivial.tex}}}
-
-\vspace{2pt}
-\onslide<3->{\small Start: \textbf{trivial} sample $(0,X^{-\bar b}v)$, public since $\bar b$ is public.
-After the first CMux: a \alert{real ciphertext} \ $\Rightarrow$ \ \textbf{public table, secret selection}.}
+the previous one shifted left, and the coefficient that leaves \alert{comes back negated} ($X^N=-1$).
 \end{frame}
 
 %% ===========================================================================
@@ -730,20 +683,6 @@ constant coefficient $+\mu=+\frac18$ $\Rightarrow$ \textsf{true}, with fresh noi
 \end{frame}
 
 %% ===========================================================================
-\begin{frame}{Bootstrapping resets the noise}
-\centering
-\input{../report/figures/tikz/noisereset.tex}
-
-\vspace{6pt}
-\onslide<3->{
-\begin{alertblock}{The key property}
-The output noise depends only on the evaluation key, \textbf{not} on the input
-noise ($\vartheta_{\mathrm{out}}\le\BoundTotal$): gates can be chained
-\alert{forever}. \muted{(\texttt{test09}: inputs $300\times$ noisier than fresh ones)}
-\end{alertblock}}
-\end{frame}
-
-%% ===========================================================================
 \begin{frame}{Homomorphic gates}
 \begin{columns}[c,onlytextwidth]
 \column{0.5\textwidth}
@@ -791,7 +730,7 @@ NOT & $-c_x$ \muted{(free)} & ---\\
 \end{tabular}
 \end{columns}
 \vspace{4pt}
-\onslide<2->{\small \textbf{XOR trick:} doubling sends both equal-input cases to $\pm\frac12$, the same torus point.}
+
 \end{frame}
 
 %% ===========================================================================
@@ -922,7 +861,7 @@ result $1000_2=8$ \alert{\checkmark}\\[2pt]
 \end{frame}
 
 %% ===========================================================================
-\begin{frame}[fragile]{Torus arithmetic in \texttt{uint32\_t}}
+\begin{frame}{Torus arithmetic in \texttt{uint32\_t}}
 Three C++ rules carry the whole arithmetic:
 \vspace{4pt}
 \begin{enumerate}
@@ -934,23 +873,6 @@ Three C++ rules carry the whole arithmetic:
         \muted{-- the representative in $[-\frac12,\frac12)$: how noise is measured
         and how a bit is decrypted.}
 \end{enumerate}
-\vspace{6pt}
-\begin{uncoverenv}<4->
-\begin{columns}[T,onlytextwidth]
-\column{0.46\textwidth}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
-using Torus = uint32_t;
-// decrypt a bit: sign of the phase
-bool bit = int32_t(lwePhase(c, s)) > 0;
-\end{lstlisting}
-\column{0.5\textwidth}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
-// round t to Z_2N: product in 64 bits,
-// add 1/2, drop the 32 low bits
-(uint64_t(t) * twoN + (1ull << 31)) >> 32
-\end{lstlisting}
-\end{columns}
-\end{uncoverenv}
 \end{frame}
 
 %% ===========================================================================
@@ -1002,96 +924,8 @@ $a(\omega)\,b(\omega)$ & $-1.707+0.707i$ & $-0.293-0.707i$\\
   \node[note] at (12.1,-0.85) {$=p(\omega_k)$, \ $\omega_k=e^{i\pi(4k+1)/N}$};
 \end{tikzpicture}
 
-\vspace{12pt}
-\begin{columns}[T,onlytextwidth]
-\column{0.5\textwidth}
-\begin{itemize}
-  \item Evaluate at roots of $X^N+1$: the reduction \alert{happens by itself}.
-  \item Real coefficients: one root per conjugate pair suffices.
-  \item Radix-2 Cooley--Tukey, tables precomputed once.
-  \item Hand-written \texttt{cmul}: \texttt{std::complex} checks NaN/$\infty$.
-\end{itemize}
-\column{0.46\textwidth}
-\onslide<2->{
-\begin{block}{Is \texttt{double} precise enough?}
-digit $\cdot$ torus $\cdot$ $N$ terms:
-$2^{6}\cdot2^{31}\cdot2^{10}=2^{47}<2^{53}$\\[3pt]
-measured: \alert{bit-exact}, and $\FftSpeedup\times$ faster than schoolbook
-\muted{(\FftNaive\,\textmu s $\to$ \FftFast\,\textmu s)}
-\end{block}}
-\end{columns}
-\end{frame}
-
-%% ===========================================================================
-\begin{frame}{The offset trick (1/2): balanced digits with one addition}
-\begin{itemize}
-  \item $2N\ell=6144$ digits per external product: decomposition must be cheap.
-  \item Unsigned digits $[0,\Bg)$ are bit fields, but \alert{balanced} digits
-        $[-\frac{\Bg}2,\frac{\Bg}2)$ halve $\beta$: \alert{$4\times$ less} noise.
-  \item Converting needs carry propagation \emph{and} rounding.
-\end{itemize}
-\vspace{2pt}
-\onslide<2->{
-\begin{block}{Lemma (offset trick)}
-With $h_i=2^{32-7i}$ and
-$\mathit{offset}=\sum_{i=1}^{\ell}\frac{\Bg}{2}h_i+\frac{h_\ell}{2}$:
-take the bit fields $u_i$ of $t+\mathit{offset}$, set $d_i=u_i-\frac{\Bg}{2}$. Then
-\[t=\sum_i d_ih_i+\underbrace{(r-h_\ell/2)}_{|\cdot|\,\le\,\varepsilon}\pmod{2^{32}}.\]
-\end{block}}
-\onslide<3->{\small\muted{Proof: write $t+\mathit{offset}=\sum_iu_ih_i+r$ and subtract.}
-\quad Base 10: $\mathit{offset}=0.555$, \ $0.7316+0.555\equiv0.2866\Rightarrow(2,8)-5=(-3,3)$.}
-\end{frame}
-
-%% ===========================================================================
-\begin{frame}[fragile]{The offset trick (2/2): $t=0.7$, \ $\Bg=2^7$, \ $\ell=3$}
-\centering
-\begin{tikzpicture}[font=\small]
-  \def\u{0.28}
-  \def\h{0.52}
-  \newcommand{\word}[7]{%
-    \begin{scope}[visible on=#7]
-    \fill[#2] (0,#1) rectangle (21*\u,#1+\h);
-    \fill[cGray!10] (21*\u,#1) rectangle (32*\u,#1+\h);
-    \draw[cNavy!70] (0,#1) rectangle (32*\u,#1+\h);
-    \foreach \b in {7,14,21} \draw[cNavy!70] (\b*\u,#1) -- (\b*\u,#1+\h);
-    \node at (3.5*\u,#1+0.5*\h) {#3};
-    \node at (10.5*\u,#1+0.5*\h) {#4};
-    \node at (17.5*\u,#1+0.5*\h) {#5};
-    \node at (26.5*\u,#1+0.5*\h) {#6};
-    \end{scope}
-  }
-  \node[cGray, font=\footnotesize] at (3.5*\u, 0.8) {$d_1$};
-  \node[cGray, font=\footnotesize] at (10.5*\u,0.8) {$d_2$};
-  \node[cGray, font=\footnotesize] at (17.5*\u,0.8) {$d_3$};
-  \node[cGray, font=\footnotesize] at (26.5*\u,0.8) {11 rounded bits};
-  \word{0}{cBlue!12}{$89$}{$76$}{$102$}{$819$}{<1->}
-  \word{-0.72}{cGray!6}{$64$}{$64$}{$64$}{$2^{10}$}{<2->}
-  \draw[visible on=<3->, line width=0.7pt] (-0.1,-0.88) -- (32*\u+0.1,-0.88);
-  \foreach \b in {21,14,7,0} {
-    \draw[visible on=<3->, ->, cRed, line width=0.8pt] (\b*\u+0.3,-1.5) to[bend right=50]
-      node[above=-1pt, font=\scriptsize] {$+1$} (\b*\u-0.3,-1.5);
-  }
-  \word{-2.12}{cGreen!14}{$26$}{$13$}{$38$}{$1843$}{<3->}
-  \word{-2.95}{cOrange!16}{$-38$}{$-51$}{$-26$}{---}{<4->}
-  \begin{scope}[every node/.style={anchor=east, font=\small}]
-    \node at (-0.3, 0.26) {$t=\texttt{0xB3333333}$};
-    \node[visible on=<2->] at (-0.3,-0.46) {$+\,\mathit{offset}=\texttt{0x81020400}$};
-    \node[visible on=<3->] at (-0.3,-1.86) {$=\texttt{0x34353733}$};
-    \node[visible on=<4->] at (-0.3,-2.69) {each field $-\,64$};
-  \end{scope}
-  \node[visible on=<4->, anchor=north, font=\footnotesize] at (16*\u,-3.1)
-    {\color{cRed}the carries do the balancing\color{cNavy}: \quad
-     $-\frac{38}{2^7}-\frac{51}{2^{14}}-\frac{26}{2^{21}}\equiv0.6999998$};
-\end{tikzpicture}
-
-\vspace{6pt}
-\begin{uncoverenv}<5->
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
-uint32_t t = p[j] + g.offset;                              // the only addition
-for (int i = 0; i < g.ell; ++i)
-    out[i][j] = int32_t((t >> (32-(i+1)*g.Bgbit)) & g.mask) - int32_t(g.halfBg);
-\end{lstlisting}
-\end{uncoverenv}
+\vspace{14pt}
+\scalebox{0.95}{\input{../report/figures/tikz/butterfly.tex}}
 \end{frame}
 
 %% ===========================================================================
@@ -1226,15 +1060,8 @@ peak mem.\ (MiB) & \OurRSS & \SpqRSS & \NayRSS\\
 \begin{itemize}
   \item Blind rotation: \BRShare\% of the gate.
   \item FFTs + pointwise products: \alert{\FreqShare\%}.
-  \item Decomposition: only \DecShare\% \muted{(offset trick)}.
+  \item Decomposition: only \DecShare\%.
 \end{itemize}
-\onslide<2->{
-\begin{alertblock}{Surprise: memory traffic}
-\small Each step reads a different $\BK_i$: the \BkMB\,MiB key is
-\emph{streamed} every gate.\\[3pt]
-External product: \ExtHot\,\textmu s (key in cache) vs.\
-\alert{\ExtKey\,\textmu s} (as in blind rotation) $\approx$ \MemShare\% of the gate.
-\end{alertblock}}
 \end{columns}
 \end{frame}
 
@@ -1282,65 +1109,6 @@ gate output & \BoundTotal & \AvgTotal & \alert{\NoiseVarKS}\\
 \end{frame}
 
 %% ===========================================================================
-\begin{frame}{A key-dependent bias, and why the original has none}
-\begin{columns}[c,onlytextwidth]
-\column{0.5\textwidth}
-\begin{itemize}
-  \item Each $\KSK$ entry carries a \alert{fixed} noise $e_{i,j,v}$.
-  \item Averaging over inputs with the table fixed leaves a per-key
-        \alert{bias}:
-        \[\mathrm{std}\approx\sqrt{3tN/16}\;\sigma_{\mathrm{LWE}}=\BiasStd\]
-  \item<2-> Measured over \NoiseKeys{} keys: \alert{\NoiseBiasStd}.
-  \item<3-> The original library \textbf{centers} its key-switching noise
-        $\Rightarrow$ mean error $\le\SpqMeanMax$ vs.\ ours up to \OurMeanMax.
-  \item<3-> Harmless: $100\times$ below the margin.
-\end{itemize}
-\column{0.48\textwidth}
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=7.0cm, height=5.6cm, xmin=0.3, xmax=10.7, ymin=-3.2, ymax=3.2,
-    xtick={1,...,10}, xlabel={key}, ylabel={mean error ($10^{-3}$)},
-    tick label style={font=\footnotesize}, label style={font=\small},
-    axis line style={cGray}, ymajorgrids, grid style={cGray!20}]
-  \fill[cOrange!12] (axis cs:0.3,{-2000*\BiasStdRaw}) rectangle (axis cs:10.7,{2000*\BiasStdRaw});
-  \fill[cOrange!25] (axis cs:0.3,{-1000*\BiasStdRaw}) rectangle (axis cs:10.7,{1000*\BiasStdRaw});
-  \draw[cGray, densely dashed] (axis cs:0.3,0) -- (axis cs:10.7,0);
-  \addplot[only marks, mark=*, mark size=2.6pt, cBlue,
-           visible on=<2->]
-    table[x=key, y expr=\thisrow{meanKS}*1000] {../report/data/noise_keys.dat};
-  \node[font=\scriptsize, cOrange!80!black, anchor=north east] at (axis cs:10.6,3.1)
-    {bands: $\pm1\sigma$, $\pm2\sigma$ predicted};
-\end{axis}
-\end{tikzpicture}
-\end{columns}
-\end{frame}
-
-%% ===========================================================================
-\begin{frame}{Limitations and future work}
-\begin{columns}[T,onlytextwidth]
-\column{0.47\textwidth}
-\textbf{Limitations}
-\begin{itemize}
-  \item \texttt{mt19937\_64} is \alert{not} a CSPRNG.
-  \item No constant-time guarantees on the client.
-  \item No serialization: client and server share a process.
-  \item Parameters: $\approx128$ bits as estimated by the library authors;
-        re-check with a current lattice estimator.
-\end{itemize}
-\column{0.5\textwidth}
-\textbf{Next steps} \muted{(by expected gain per effort)}
-\begin{enumerate}
-  \item Center the key-switching noise.
-  \item Remove allocations from the inner loops.
-  \item Contiguous $\BK$ + prefetch the next TRGSW sample.
-  \item Vectorize the FFT (AVX2/FMA) or radix-4.
-  \item Independent gates in parallel threads.
-  \item Programmable bootstrapping.
-\end{enumerate}
-\end{columns}
-\end{frame}
-
-%% ===========================================================================
 \begin{frame}{Takeaways}
 \centering
 \begin{tikzpicture}[font=\small,
@@ -1349,14 +1117,13 @@ gate output & \BoundTotal & \AvgTotal & \alert{\NoiseVarKS}\\
     TFHE from scratch in \LibLines{} lines; \OurNandMean\,ms per gate;
     \TotalGates{} gates, 0 errors.};
   \node[card=cGreen!8] at (7.0,1.25) {\textbf{\color{cGreen}Noise is predictable.}\\
-    Measured variances match an average-case analysis, which also explains a
-    key-dependent bias.};
-  \node[card=cOrange!10] at (0,-1.25) {\textbf{\color{cOrange!90!black}Small tricks matter.}\\
-    The offset trick makes balanced decomposition a single addition; the
-    FFT-domain key saves most transforms.};
-  \node[card=cRed!7] at (7.0,-1.25) {\textbf{\color{cRed}Performance lives in the FFT\dots}\\
-    \dots and in memory: $\SlowdownSpq\times$ from assembly, $\SpeedupNay\times$
-    ahead of portable; the 59\,MiB key is streamed every gate.};
+    Measured variances match an average-case analysis.};
+  \node[card=cOrange!10] at (0,-1.25) {\textbf{\color{cOrange!90!black}Precomputation matters.}\\
+    Keeping the bootstrapping key in the FFT domain saves most of the
+    transforms.};
+  \node[card=cRed!7] at (7.0,-1.25) {\textbf{\color{cRed}Performance lives in the FFT.}\\
+    $\SlowdownSpq\times$ behind the assembly FFT, $\SpeedupNay\times$ ahead of the
+    portable one.};
 \end{tikzpicture}
 \end{frame}
 
@@ -1368,8 +1135,7 @@ gate output & \BoundTotal & \AvgTotal & \alert{\NoiseVarKS}\\
 \vspace{1.2cm}
 {\color{white}\Huge Thank you!}\\[14pt]
 {\color{cOrange}\Large Questions?}\\[30pt]
-{\color{white!75}\small Matheus de Oliveira Saldanha \textbullet\ MO422 \textbullet\ Unicamp}\\[4pt]
-{\color{white!60}\footnotesize code, tests, report and these slides: \texttt{learning-tfhe}}
+{\color{white!75}\small Matheus de Oliveira Saldanha \textbullet\ MO422 \textbullet\ Unicamp}
 \end{frame}
 }
 
