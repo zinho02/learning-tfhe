@@ -439,9 +439,6 @@ with error at most $\varepsilon=1/(2\Bg^\ell)$.
   \draw[visible on=<3->, ->, cRed, line width=0.8pt] (a1.south) -- node[left, font=\scriptsize] {$7-10$} (b1.north);
   \node[visible on=<4->, anchor=west, font=\footnotesize, align=left] at (-1.6,-2.2)
     {check: $-\frac{3}{10}+\frac{3}{100}=-0.27\equiv0.73$,\\error $0.0016\le\varepsilon=0.005$};
-  \node[visible on=<5->, anchor=west, font=\footnotesize, align=left, cBlue!80!black] at (-1.6,-3.1)
-    {implementation trick (later): $t+0.555\equiv0.2866$,\\
-     digits $2,8$ minus $5$ $\Rightarrow$ $-3,3$: \ one addition!};
 \end{tikzpicture}
 \end{columns}
 \end{frame}
@@ -960,10 +957,6 @@ $a(\omega)\,b(\omega)$ & $-1.707+0.707i$ & $-0.293-0.707i$\\
   \node[font=\scriptsize, cGray] at (10.85,-2.2) {only $2$ backward};
 \end{tikzpicture}
 
-\vspace{8pt}
-\onslide<2->{
-$8$ FFTs per external product $\times$ $630$ per gate $\approx$ \alert{5000 FFTs of size 512 per gate}.\\
-\muted{Price: $\BK$ takes \BkMB\,MiB, twice its coefficient form.}}
 \end{frame}
 
 %% ===========================================================================
@@ -1023,17 +1016,6 @@ Input std.\ dev.\ $\approx0.005$ vs.\ margin $\frac18$: \textbf{over 20 std.\ de
   \item[$\Rightarrow$] Same algorithm in all three: the \textbf{FFT decides}.
 \end{itemize}
 \vspace{6pt}
-\onslide<2->{
-\footnotesize\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{@{}lccc@{}}
-\toprule
- & ours & spqlios & nayuki\\
-\midrule
-key gen.\ (s) & \OurKeygenRange & \SpqKeygenRange & \NayKeygenRange\\
-peak mem.\ (MiB) & \OurRSS & \SpqRSS & \NayRSS\\
-\bottomrule
-\end{tabular}\\[4pt]
-\muted{\footnotesize Keys: $\BK$ \BkMB\,MiB, $\KSK$ \KskMB\,MiB; one encrypted bit: 2524 bytes.}}
 \end{columns}
 \end{frame}
 
