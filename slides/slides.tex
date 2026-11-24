@@ -194,34 +194,6 @@
 \end{frame}
 
 %% ===========================================================================
-\begin{frame}{This project}
-\begin{columns}[T,onlytextwidth]
-\column{0.5\textwidth}
-\textbf{Goal} (from the proposal)
-\begin{itemize}
-  \item Study TFHE and implement it \alert{from scratch} in C++.
-  \item Use the \alert{same parameters} as the original library
-        (128-bit set: $n=630$, $N=1024$).
-  \item Compare with the original on four criteria.
-\end{itemize}
-\column{0.46\textwidth}
-\centering
-\begin{tikzpicture}[font=\small,
-]
-  \node[crit=cBlue!10]   at (0,0)     {\textbf{Correctness}\\[2pt]\footnotesize error rate};
-  \node[crit=cGreen!10]  at (3.0,0)   {\textbf{Performance}\\[2pt]\footnotesize time per gate};
-  \node[crit=cOrange!10] at (0,-1.8)  {\textbf{Memory}\\[2pt]\footnotesize key sizes};
-  \node[crit=cRed!8]     at (3.0,-1.8){\textbf{Noise}\\[2pt]\footnotesize measured vs.\ theory};
-\end{tikzpicture}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Roadmap: each concept solves a problem raised by the previous one}
-\centering
-\scalebox{0.93}{\input{../report/figures/tikz/roadmap.tex}}
-\end{frame}
-
-%% ===========================================================================
 \section{The scheme}
 
 \begin{frame}{The torus $\T=\R/\Z$}
@@ -946,62 +918,14 @@ Input std.\ dev.\ $\approx0.005$ vs.\ margin $\frac18$: \textbf{over 20 std.\ de
 \end{frame}
 
 %% ===========================================================================
-\begin{frame}{Noise: bounds, predictions and measurements}
-\begin{columns}[c,onlytextwidth]
-\column{0.5\textwidth}
-\begin{itemize}
-  \item Worst-case bounds assume every digit has magnitude $\beta$.
-  \item Digits are \alert{uniform}: $\mathbb E[d^2]\approx\beta^2/3$ $\Rightarrow$ a third of the bound.
-  \item<2-> Key switching: fixed table noise, only $\frac34$ of digits nonzero.
-\end{itemize}
-\vspace{4pt}
-\onslide<3->{
-\small\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-variance & bound & predicted & measured\\
-\midrule
-blind rot. & \BoundBR & \AvgBR & \alert{\NoiseVarBR}\\
-gate output & \BoundTotal & \AvgTotal & \alert{\NoiseVarKS}\\
-\bottomrule
-\end{tabular}\\[3pt]
-\muted{\footnotesize \NoiseKeys{} keys $\times$ \NoiseGates{} gates, within-key variance}}
-\column{0.48\textwidth}
-\onslide<3->{
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=7.0cm, height=5.6cm, xmin=-12, xmax=12, ymin=0,
-    xlabel={error $-$ key mean ($10^{-3}$)}, ytick=\empty,
-    tick label style={font=\footnotesize}, label style={font=\small},
-    axis line style={cGray}, scaled ticks=false,
-    legend style={font=\scriptsize, at={(0.98,0.97)}, anchor=north east, draw=none,
-                  fill=white, fill opacity=0.85, text opacity=1},
-    legend cell align=left]
-  \addplot[ybar interval=0.98, fill=cBlue!35, draw=cBlue!70!black]
-    table[x expr=\thisrow{center}*1000-0.25, y=density] {../report/data/noise_hist.dat};
-  \addlegendentry{measured}
-  \addplot[cOrange, line width=1.4pt, domain=-12:12, samples=161]
-    {exp(-(x/1000)^2/(2*\AvgTotalRaw))/sqrt(2*pi*\AvgTotalRaw)};
-  \addlegendentry{prediction}
-\end{axis}
-\end{tikzpicture}}
-\end{columns}
-\end{frame}
-
-%% ===========================================================================
 \begin{frame}{Takeaways}
 \centering
 \begin{tikzpicture}[font=\small,
 ]
-  \node[card=cBlue!8] at (0,1.25) {\textbf{\color{cBlue}It works.}\\
+  \node[card=cBlue!8] at (3.5,1.25) {\textbf{\color{cBlue}It works.}\\
     TFHE from scratch in \LibLines{} lines; \OurNandMean\,ms per gate;
     \TotalGates{} gates, 0 errors.};
-  \node[card=cGreen!8] at (7.0,1.25) {\textbf{\color{cGreen}Noise is predictable.}\\
-    Measured variances match an average-case analysis.};
-  \node[card=cOrange!10] at (0,-1.25) {\textbf{\color{cOrange!90!black}Precomputation matters.}\\
-    Keeping the bootstrapping key in the FFT domain saves most of the
-    transforms.};
-  \node[card=cRed!7] at (7.0,-1.25) {\textbf{\color{cRed}Performance lives in the FFT.}\\
+  \node[card=cRed!7] at (3.5,-1.25) {\textbf{\color{cRed}Performance lives in the FFT.}\\
     $\SlowdownSpq\times$ behind the assembly FFT, $\SpeedupNay\times$ ahead of the
     portable one.};
 \end{tikzpicture}

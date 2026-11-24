@@ -1,4 +1,4 @@
-\beamer@sectionintoc {1}{The scheme}{9}{0}{1}
-\beamer@sectionintoc {2}{Gate bootstrapping}{49}{0}{2}
-\beamer@sectionintoc {3}{Implementation}{79}{0}{3}
-\beamer@sectionintoc {4}{Evaluation}{81}{0}{4}
+\beamer@sectionintoc {1}{The scheme}{7}{0}{1}
+\beamer@sectionintoc {2}{Gate bootstrapping}{47}{0}{2}
+\beamer@sectionintoc {3}{Implementation}{77}{0}{3}
+\beamer@sectionintoc {4}{Evaluation}{79}{0}{4}
