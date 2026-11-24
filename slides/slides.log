@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2026.4.16)  22 NOV 2026 22:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2026.4.16)  24 NOV 2026 16:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1926,100 +1926,65 @@ Overfull \vbox (4.58562pt too high) detected at line 858
 
 [80
 
-]
-LaTeX Font Info:    Font shape `T1/FiraMono-TOsF/b/n' in size <12> not availabl
-e
-(Font)              Font shape `T1/FiraMono-TOsF/bold/n' tried instead on input
- line 873.
-LaTeX Font Info:    Font shape `T1/FiraMono-TOsF/bold/n' will be
-(Font)              scaled to size 10.32pt on input line 873.
- [81
-
-] [82
-
-] [83
-
-] (../report/figures/tikz/roots.tex) [84
-
-]
-(../report/figures/tikz/roots.tex) [85
-
-] (../report/figures/tikz/roots.tex)
-[86
-
-] (../report/figures/tikz/butterfly.tex) [87
-
-]
-Overfull \hbox (1.38336pt too wide) in paragraph at lines 960--960
- [][]\T1/FiraSans-LF/regular/n/9 decompose 
- []
-
-
-Overfull \hbox (1.38336pt too wide) in paragraph at lines 960--960
- [][]\T1/FiraSans-LF/regular/n/9 decompose 
- []
-
-[88
-
-] [89
+] [81
 
 ]
 LaTeX Font Info:    Font shape `T1/FiraMono-TOsF/m/n' in size <10.95> not avail
 able
 (Font)              Font shape `T1/FiraMono-TOsF/regular/n' tried instead on in
-put line 990.
+put line 888.
 LaTeX Font Info:    Font shape `T1/FiraMono-TOsF/regular/n' will be
-(Font)              scaled to size 9.41699pt on input line 990.
+(Font)              scaled to size 9.41699pt on input line 888.
 
-Overfull \vbox (4.44194pt too high) detected at line 990
+Overfull \vbox (4.44194pt too high) detected at line 888
  []
 
-[90
+[82
 
 ]
-Overfull \vbox (4.44194pt too high) detected at line 990
+Overfull \vbox (4.44194pt too high) detected at line 888
  []
 
-[91
+[83
 
 ]
-Overfull \vbox (4.44194pt too high) detected at line 990
+Overfull \vbox (4.44194pt too high) detected at line 888
  []
 
-[92
+[84
 
 ]
 PGFPlots: reading {../report/data/time.dat}
 PGFPlots: reading {../report/data/time.dat}
- [93
+ [85
 
 ]
 PGFPlots: reading {../report/data/profile.dat}
- [94
+ [86
 
 ]
 PGFPlots: reading {../report/data/noise_hist.dat}
- [95
+ [87
 
 ]
 PGFPlots: reading {../report/data/noise_hist.dat}
- [96
+ [88
 
 ]
 PGFPlots: reading {../report/data/noise_hist.dat}
- [97
+ [89
 
-] [98
+] [90
 
 ]
 LaTeX Font Info:    Font shape `T1/FiraSans-LF/m/n' in size <24.88> not availab
 le
 (Font)              Font shape `T1/FiraSans-LF/regular/n' tried instead on inpu
-t line 1121.
+t line 1019.
 LaTeX Font Info:    Font shape `T1/FiraSans-LF/regular/n' will be
-(Font)              scaled to size 24.88pt on input line 1121.
+(Font)              scaled to size 24.88pt on input line 1019.
 LaTeX Font Info:    Trying to load font information for TS1+FiraSans-LF on inpu
-t line 1121.
+t line 1019.
 
 (/usr/share/texlive/texmf-dist/tex/latex/fira/TS1FiraSans-LF.fd
 File: TS1FiraSans-LF.fd 2019/10/10 (autoinst) Font definitions for TS1/FiraSans
@@ -2028,25 +1993,25 @@ File: TS1FiraSans-LF.fd 2019/10/10 (autoinst) Font definitions for TS1/FiraSans
 LaTeX Font Info:    Font shape `TS1/FiraSans-LF/m/n' in size <10> not available
 
 (Font)              Font shape `TS1/FiraSans-LF/regular/n' tried instead on inp
-ut line 1121.
+ut line 1019.
 LaTeX Font Info:    Font shape `TS1/FiraSans-LF/regular/n' will be
-(Font)              scaled to size 10.0pt on input line 1121.
- [99
+(Font)              scaled to size 10.0pt on input line 1019.
+ [91
 
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/fira/fir_d67aat.enc}]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\translate ' on input line 1125.
+(hyperref)                removing `\translate ' on input line 1023.
 
 LaTeX Font Info:    Font shape `T1/FiraMono-TOsF/m/n' in size <10> not availabl
 e
 (Font)              Font shape `T1/FiraMono-TOsF/regular/n' tried instead on in
-put line 1144.
+put line 1042.
 LaTeX Font Info:    Font shape `T1/FiraMono-TOsF/regular/n' will be
-(Font)              scaled to size 8.6pt on input line 1144.
-[100
+(Font)              scaled to size 8.6pt on input line 1042.
+[92
 
-] [101
+] [93
 
 ]
 \tf@nav=\write6
@@ -2063,11 +2028,11 @@ Package rerunfilecheck Info: File `slides.out' has not changed.
 (rerunfilecheck)             Checksum: 19E78D16665E4D56049EBD7D8B47268D;519.
  ) 
 Here is how much of TeX's memory you used:
- 42034 strings out of 476685
- 984742 string characters out of 5807250
+ 41800 strings out of 476685
+ 981167 string characters out of 5807250
  1901388 words of memory out of 6000000
- 61237 multiletter control sequences out of 15000+600000
- 952197 words of font info for 146 fonts, out of 8000000 for 9000
+ 61030 multiletter control sequences out of 15000+600000
+ 951570 words of font info for 144 fonts, out of 8000000 for 9000
  814 hyphenation exceptions out of 8191
  128i,21n,122p,1881b,2907s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/fira/FiraMono-Bold.pfb></us
@@ -2079,24 +2044,23 @@ texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-
 dist/fonts/type1/public/amsfonts/cmextra/cmex9.pfb></usr/share/texlive/texmf-di
 st/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fon
 ts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
-c/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmmi9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
-cmss10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss8.
-pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss9.pfb></u
-sr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/sha
-re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/share/texl
-ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share/texlive/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmsy9.pfb></usr/share/texlive/texmf-dist/fonts/type1/p
-ublic/amsfonts/symbols/msam10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
-blic/amsfonts/symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw
-/zapfding/uzdr.pfb>
-Output written on slides.pdf (101 pages, 671786 bytes).
+1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmmi9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmss10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmss8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss9.
+pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/sha
+re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/share/texlive/texmf-dist/fonts/
+type1/public/amsfonts/symbols/msam10.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/public/amsfonts/symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/urw/zapfding/uzdr.pfb>
+Output written on slides.pdf (93 pages, 638017 bytes).
 PDF statistics:
- 764 PDF objects out of 1000 (max. 8388607)
- 584 compressed objects within 6 object streams
- 208 named destinations out of 1000 (max. 500000)
+ 715 PDF objects out of 1000 (max. 8388607)
+ 545 compressed objects within 6 object streams
+ 192 named destinations out of 1000 (max. 500000)
  179 words of extra memory for PDF output out of 10000 (max. 10000000)
 
